@@ -1,0 +1,11 @@
+*.pyc
+*.swp
+*.ipynb_checkpoints
+*.json
+*.pth.tar
+.DS_Store
+/data
+/pycocotools
+/runs
+/vocab
+*.zip
