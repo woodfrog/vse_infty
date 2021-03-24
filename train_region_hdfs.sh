@@ -1,3 +1,9 @@
-CUDA_VISIBLE_DEVICES=0,1,2,3 python3 train.py --data_path /tmp/data/coco --data_name coco_precomp --vocab_path /tmp/data/vocab --logger_name runs/coco_entity_bert_var_gpool_local/log --model_name runs/coco_entity_bert_var_gpool_local  --bi_gru --cross_attn=none --num_epochs=25 --lr_update=15 --learning_rate=.0005 --img_pool gpool --precomp_enc_type basic --workers 10 --log_step 200 --embed_size 1024 --vse_mean_warmup_epochs 1 --drop  --resume runs/coco_entity_bert_var_gpool_local/checkpoint.pth.tar
+DATA_PATH='data/features'
+VOCAB_PATH='data/vocab'
+DATASET_NAME='coco_precomp'
 
-#CUDA_VISIBLE_DEVICES=0,1,2,3 python3 train.py --data_path /tmp/data/f30k --data_name f30k_precomp --vocab_path /tmp/data/vocab --logger_name runs/f30k_entity_bert_var_gpool_local/log --model_name runs/f30k_entity_bert_var_gpool_local  --bi_gru --cross_attn=none --num_epochs=25 --lr_update=15 --learning_rate=.0005 --img_pool gpool --precomp_enc_type basic --workers 10 --log_step 200 --embed_size 1024 --vse_mean_warmup_epochs 1 --drop 
+CUDA_VISIBLE_DEVICES=0,1,2,3 python3 train.py \
+  --data_path ${DATA_PATH} --data_name ${DATASET_NAME} --vocab_path ${VOCAB_PATH} \
+  --logger_name runs/${DATASET_NAME}_entity_bert_var_gpool_local/log --model_name runs/${DATASET_NAME}_entity_bert_var_gpool_local \
+  --cross_attn=none --num_epochs=25 --lr_update=15 --learning_rate=.0005 --img_pool gpool --precomp_enc_type basic --workers 10 \
+  --log_step 200 --embed_size 1024 --vse_mean_warmup_epochs 1 --drop  --resume runs/${DATASET_NAME}_entity_bert_var_gpool_local/checkpoint.pth.tar
