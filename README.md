@@ -4,8 +4,10 @@
 
 2. Run the checkpoint on Arnold with the cleaned repo to check the results. (done)
 
-3. Update the dataset part, remove HDFS related stuffs to create a version for local-FS.
+3. Further refactor and clean up the codebase, remove legacy codes. 
 
-4. Run the revised version again to make sure the ckpts produce the same results as before.
+4. Update the dataset part, remove HDFS related stuffs to create a version for local-FS.
 
-5. Detailed instructions for running the released code.
+5. Run the revised version again to make sure the ckpts produce the same results as before.
+
+6. Detailed instructions for running the released code.

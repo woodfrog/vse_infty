@@ -71,7 +71,7 @@ def get_image_encoder(data_name, img_dim, embed_size, opt, precomp_enc_type='bas
             img_dim, embed_size, opt, no_imgnorm)
     elif precomp_enc_type == 'backbone':
         backbone_cnn = ResnetFeatureExtractor(opt.backbone_source, opt.backbone_path, fixed_blocks=2)
-        img_enc = EncoderImage(backbone_cnn, img_dim, embed_size, opt, no_imgnorm)
+        img_enc = EncoderImageFull(backbone_cnn, img_dim, embed_size, opt, no_imgnorm)
     else:
         raise ValueError("Unknown precomp_enc_type: {}".format(precomp_enc_type))
 
@@ -98,12 +98,9 @@ class EncoderImageAggr(nn.Module):
         self.fc.weight.data.uniform_(-r, r)
         self.fc.bias.data.fill_(0)
 
-    def forward(self, images, image_lengths, lengths_entity=None):
+    def forward(self, images, image_lengths):
         """Extract image feature vectors."""
-        # assuming that the precomputed features are already l2-normalized
-
         features = self.fc(images)
-
         if self.opt.precomp_enc_type == 'basic':
             features = self.mlp(images) + features
 
@@ -129,21 +126,20 @@ class EncoderImageAggr(nn.Module):
         super(EncoderImageAggr, self).load_state_dict(new_state)
 
 
-class EncoderImage(nn.Module):
+class EncoderImageFull(nn.Module):
     def __init__(self, backbone_cnn, img_dim, embed_size, opt, no_imgnorm=False):
-        super(EncoderImage, self).__init__()
+        super(EncoderImageFull, self).__init__()
         self.backbone = backbone_cnn
         self.image_encoder = EncoderImageAggr(img_dim, embed_size, opt, no_imgnorm)
         self.opt = opt
         self.backbone_freezed = False
 
-    def forward(self, images, rois=None, lengths_entity=None):
+    def forward(self, images):
         """Extract image feature vectors."""
-        # assuming that the precomputed features are already l2-normalized
-        base_features = self.backbone(images, rois, lengths_entity)
+        base_features = self.backbone(images)
 
         if self.training:
-            # Random drop grids
+            # Size Augmentation, randomly drop grids
             base_length = base_features.size(1)
             features = []
             feat_lengths = []
@@ -167,7 +163,7 @@ class EncoderImage(nn.Module):
             feat_lengths = torch.zeros(base_features.size(0)).to(base_features.device)
             feat_lengths[:] = base_features.size(1)
 
-        features = self.image_encoder(base_features, feat_lengths, lengths_entity)
+        features = self.image_encoder(base_features, feat_lengths)
 
         return features
 
@@ -189,27 +185,22 @@ class EncoderImage(nn.Module):
         """
         own_state = self.state_dict()
         new_state = OrderedDict()
-        import pdb;
-        pdb.set_trace()
         for name, param in state_dict.items():
             if name in own_state:
                 new_state[name] = param
-        super(EncoderImage, self).load_state_dict(new_state)
+        super(EncoderImageFull, self).load_state_dict(new_state)
 
 
-# RNN Based Language Model
+# Language Model with BERT
 class EncoderText(nn.Module):
-    def __init__(self, opt, vocab_size, word_dim, embed_size, num_layers,
-                 use_bi_gru=False, no_txtnorm=False):
+    def __init__(self, opt, embed_size, no_txtnorm=False):
         super(EncoderText, self).__init__()
         self.opt = opt
         self.embed_size = embed_size
         self.no_txtnorm = no_txtnorm
 
-        # caption embedding
         self.bert = BertModel.from_pretrained('bert-base-uncased')
         self.linear = nn.Linear(768, embed_size)
-
         self.gpool = GPO(32, 32)
 
     def load_state_dict(self, state_dict):
@@ -253,10 +244,7 @@ class VSEModel(object):
         self.img_enc = get_image_encoder(opt.data_name, opt.img_dim, opt.embed_size, opt,
                                          precomp_enc_type=opt.precomp_enc_type,
                                          no_imgnorm=opt.no_imgnorm)
-        self.txt_enc = EncoderText(opt, opt.vocab_size, opt.word_dim,
-                                   opt.embed_size, opt.num_layers,
-                                   use_bi_gru=opt.bi_gru,
-                                   no_txtnorm=opt.no_txtnorm)
+        self.txt_enc = EncoderText(opt, opt.embed_size, no_txtnorm=opt.no_txtnorm)
         if torch.cuda.is_available():
             self.img_enc.cuda()
             self.txt_enc.cuda()
@@ -273,6 +261,7 @@ class VSEModel(object):
         self.params = params
         self.opt = opt
 
+        # Set up the lr for different parts of the VSE model
         decay_factor = 1e-4
         if opt.precomp_enc_type == 'basic':
             if self.opt.optim == 'adam':
@@ -324,7 +313,7 @@ class VSEModel(object):
         logger.info('Use {} as the optimizer, with init lr {}'.format(self.opt.optim, opt.learning_rate))
 
         self.Eiters = 0
-        self.img_enc_parallel = False
+        self.data_parallel = False
 
     def set_max_violation(self, max_violation):
         if max_violation:
@@ -336,18 +325,9 @@ class VSEModel(object):
         state_dict = [self.img_enc.state_dict(), self.txt_enc.state_dict()]
         return state_dict
 
-    def load_state_dict(self, state_dict, is_ckpt_parallel=True):
-        if self.opt.precomp_enc_type == 'basic':
-            self.img_enc.load_state_dict(state_dict[0])
-            self.txt_enc.load_state_dict(state_dict[1])
-        else:
-            if is_ckpt_parallel:
-                self.img_enc.load_state_dict(state_dict[0])
-                self.txt_enc.load_state_dict(state_dict[1])
-            else:
-                self.img_enc.load_state_dict(state_dict[0])
-                self.txt_enc.module.load_state_dict(state_dict[1])
-            logger.info('Load full model with backbone')
+    def load_state_dict(self, state_dict):
+        self.img_enc.load_state_dict(state_dict[0])
+        self.txt_enc.load_state_dict(state_dict[1])
 
     def train_start(self):
         """switch to train mode
@@ -367,8 +347,6 @@ class VSEModel(object):
                 self.img_enc.module.freeze_backbone()
             else:
                 self.img_enc.freeze_backbone()
-        elif self.opt.precomp_enc_type == 'last_res_block':
-            self.img_enc.module.freeze_backbone()
 
     def unfreeze_backbone(self, fixed_blocks):
         if 'backbone' in self.opt.precomp_enc_type:
@@ -376,21 +354,18 @@ class VSEModel(object):
                 self.img_enc.module.unfreeze_backbone(fixed_blocks)
             else:
                 self.img_enc.unfreeze_backbone(fixed_blocks)
-        elif self.opt.precomp_enc_type == 'last_res_block':
-            self.img_enc.module.unfreeze_backbone()
 
-    def parallel_img_encoder(self):
+    def make_data_parallel(self):
         self.img_enc = nn.DataParallel(self.img_enc)
         self.txt_enc = nn.DataParallel(self.txt_enc)
-        self.img_enc_parallel = True
+        self.data_parallel = True
         logger.info('Image encoder is data paralleled now.')
 
     @property
-    def parallel(self):
-        return self.img_enc_parallel
+    def is_data_parallel(self):
+        return self.data_parallel
 
-    def forward_emb(self, images, captions, lengths, cloze_labels=None, rois=None, lengths_entity=None,
-                    image_lengths=None):
+    def forward_emb(self, images, captions, lengths, image_lengths=None):
         """Compute the image and caption embeddings
         """
         # Set mini-batch dataset
@@ -401,13 +376,10 @@ class VSEModel(object):
                 image_lengths = image_lengths.cuda()
             img_emb = self.img_enc(images, image_lengths)
         else:
-            assert rois is not None
             if torch.cuda.is_available():
                 images = images.cuda()
                 captions = captions.cuda()
-                if rois[0] is not None:
-                    rois = rois.cuda()
-            img_emb = self.img_enc(images, rois, lengths_entity)
+            img_emb = self.img_enc(images)
 
         lengths = torch.Tensor(lengths).cuda()
         cap_emb = self.txt_enc(captions, lengths)
@@ -420,7 +392,7 @@ class VSEModel(object):
         self.logger.update('Le', loss.data.item(), img_emb.size(0))
         return loss
 
-    def train_emb(self, images, image_lengths, captions, lengths, ids, cloze_labels, warmup_alpha=None):
+    def train_emb(self, images, captions, lengths, image_lengths=None, warmup_alpha=None):
         """One training step given images and captions.
         """
         self.Eiters += 1
@@ -428,47 +400,18 @@ class VSEModel(object):
         self.logger.update('lr', self.optimizer.param_groups[0]['lr'])
 
         # compute the embeddings
-        img_emb, cap_emb = self.forward_emb(images, captions, lengths,
-                                            cloze_labels=cloze_labels,
-                                            image_lengths=image_lengths)
+        img_emb, cap_emb = self.forward_emb(images, captions, lengths, image_lengths=image_lengths)
 
         # measure accuracy and record loss
         self.optimizer.zero_grad()
-        loss_matching = self.forward_loss(img_emb, cap_emb)
-        loss = loss_matching
+        loss = self.forward_loss(img_emb, cap_emb)
 
         if warmup_alpha is not None:
             loss = loss * warmup_alpha
 
-        # compute gradient and do SGD step
+        # compute gradient and update
         loss.backward()
         if self.grad_clip > 0:
             clip_grad_norm_(self.params, self.grad_clip)
         self.optimizer.step()
 
-    def train_emb_with_backbone(self, images, rois, captions, lengths, ids=None, cloze_labels=None, lengths_entity=None,
-                                warmup_alpha=None):
-        """One training step given images and captions.
-        """
-        self.Eiters += 1
-        self.logger.update('Eit', self.Eiters)
-        self.logger.update('lr', self.optimizer.param_groups[0]['lr'])
-
-        # compute the embeddings
-        img_emb, cap_emb = self.forward_emb(images, captions, lengths,
-                                            cloze_labels=cloze_labels, rois=rois,
-                                            lengths_entity=lengths_entity)
-
-        # measure accuracy and record loss
-        self.optimizer.zero_grad()
-        loss_matching = self.forward_loss(img_emb, cap_emb)
-        loss = loss_matching
-
-        if warmup_alpha is not None:
-            loss = loss * warmup_alpha
-
-        # compute gradient and do SGD step
-        loss.backward()
-        if self.grad_clip > 0:
-            clip_grad_norm_(self.params, self.grad_clip)
-        self.optimizer.step()

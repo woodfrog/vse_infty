@@ -1,20 +1,17 @@
 """Training script"""
-
 import _init_paths
 import os
 import time
 
-import cv2
 import torch
 from transformers import BertTokenizer
 import numpy
 
 import numpy as np
-from datasets import coco_hdfs, flickr_hdfs
+from datasets import image_caption
 import vse
 from vse import VSEModel
-from evaluation import i2t, t2i, AverageMeter, LogCollector, encode_data, cosine_sim
-from lib.utils.hdfs_utils import torch_save, torch_load
+from evaluation import i2t, t2i, AverageMeter, LogCollector, encode_data, compute_sim
 
 import logging
 import tensorboard_logger as tb_logger
@@ -111,7 +108,6 @@ def main():
 
     opt = parser.parse_args()
 
-    logging_path = os.path.join(opt.model_name, 'log.txt')
     if not os.path.exists(opt.model_name):
         os.makedirs(opt.model_name)
     logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
@@ -125,13 +121,8 @@ def main():
     vocab = tokenizer.vocab
     opt.vocab_size = len(vocab)
 
-    # Load data loaders
-    if 'coco' in opt.data_name:
-        train_loader, val_loader = coco_hdfs.get_loaders(
-            opt.data_path, tokenizer, opt.batch_size, opt.workers, opt)
-    else:
-        train_loader, val_loader = flickr_hdfs.get_loaders(
-            opt.data_path, tokenizer, opt.batch_size, opt.workers, opt)
+    train_loader, val_loader = image_caption.get_loaders(
+        opt.data_path, opt.data_name, tokenizer, opt.batch_size, opt.workers, opt)
 
     model = VSEModel(opt)
 
@@ -145,8 +136,8 @@ def main():
             checkpoint = torch.load(opt.resume)
             start_epoch = checkpoint['epoch']
             best_rsum = checkpoint['best_rsum']
-            if not model.parallel:
-                model.parallel_img_encoder()
+            if not model.is_data_parallel:
+                model.make_data_parallel()
             model.load_state_dict(checkpoint['model'])
             # Eiters is used to show logs as the continuation of another training
             model.Eiters = checkpoint['Eiters']
@@ -158,8 +149,8 @@ def main():
         else:
             logger.info("=> no checkpoint found at '{}'".format(opt.resume))
 
-    if not model.parallel:
-        model.parallel_img_encoder()
+    if not model.is_data_parallel:
+        model.make_data_parallel()
 
     # Train the Model
     best_rsum = 0
@@ -186,11 +177,11 @@ def main():
             elif epoch < opt.embedding_warmup_epochs + opt.backbone_warmup_epochs:
                 model.unfreeze_backbone(3)  # only train the last block of resnet backbone
             elif epoch < opt.embedding_warmup_epochs + opt.backbone_warmup_epochs * 2:
-                model.unfreeze_backbone(2)  # train the last two blocks of resnet backbone
+                model.unfreeze_backbone(2)
             elif epoch < opt.embedding_warmup_epochs + opt.backbone_warmup_epochs * 3:
-                model.unfreeze_backbone(1)  # train the last two blocks of resnet backbone
+                model.unfreeze_backbone(1)
             else:
-                model.unfreeze_backbone(0)  # train the last two blocks of resnet backbone
+                model.unfreeze_backbone(0)
         elif opt.precomp_enc_type == 'last_res_block':
             if epoch < opt.embedding_warmup_epochs:
                 model.freeze_backbone()
@@ -216,8 +207,6 @@ def main():
             'opt': opt,
             'Eiters': model.Eiters,
         }, is_best, filename='checkpoint.pth.tar'.format(epoch), prefix=opt.model_name + '/')
-        if opt.precomp_enc_type != 'basic':
-            train_loader.dataset.shuffle_index()
 
 
 def train(opt, train_loader, model, epoch, val_loader):
@@ -246,13 +235,15 @@ def train(opt, train_loader, model, epoch, val_loader):
 
         # Update the model
         if opt.precomp_enc_type == 'basic':
-            model.train_emb(*train_data)
+            images, img_lengths, captions, lengths, _ = train_data
+            model.train_emb(images, captions, lengths, image_lengths=img_lengths)
         else:
+            images, captions, lengths, _ = train_data
             if epoch == opt.embedding_warmup_epochs:
                 warmup_alpha = float(i) / num_loader_iter
-                model.train_emb_with_backbone(*train_data, warmup_alpha=warmup_alpha)
+                model.train_emb(images, captions, lengths, warmup_alpha=warmup_alpha)
             else:
-                model.train_emb_with_backbone(*train_data)
+                model.train_emb(images, captions, lengths)
 
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -300,7 +291,7 @@ def validate(opt, val_loader, model):
     img_embs = numpy.array([img_embs[i] for i in range(0, len(img_embs), 5)])
 
     start = time.time()
-    sims = cosine_sim(img_embs, cap_embs)
+    sims = compute_sim(img_embs, cap_embs)
     end = time.time()
     logger.info("calculate similarity time:".format(end - start))
 
@@ -338,14 +329,13 @@ def validate(opt, val_loader, model):
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar', prefix=''):
     logger = logging.getLogger(__name__)
     tries = 15
-    error = None
 
     # deal with unstable I/O. Usually not necessary.
     while tries:
         try:
-            torch_save(state, prefix + filename)
+            torch.save(state, prefix + filename)
             if is_best:
-                torch_save(state, prefix + 'model_best.pth.tar')
+                torch.save(state, prefix + 'model_best.pth.tar')
         except IOError as e:
             error = e
             tries -= 1

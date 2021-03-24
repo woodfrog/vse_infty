@@ -2,7 +2,7 @@
 from __future__ import print_function
 import _init_paths
 
-from datasets import coco_hdfs, flickr_hdfs
+from datasets import image_caption
 from collections import OrderedDict
 import time
 import torch
@@ -13,8 +13,6 @@ import numpy as np
 import logging
 
 logger = logging.getLogger(__name__)
-
-import pdb
 
 
 class AverageMeter(object):
@@ -93,18 +91,16 @@ def encode_data(model, data_loader, log_step=10, logging=logger.info, backbone=F
     for i, data_i in enumerate(data_loader):
         # make sure val logger is used
         if not backbone:
-            images, image_lengths, captions, lengths, ids, cloze_labels = data_i
+            images, image_lengths, captions, lengths, ids = data_i
         else:
-            images, rois, captions, lengths, ids, cloze_labels = data_i
+            images, captions, lengths, ids = data_i
         model.logger = val_logger
 
         # compute the embeddings
         if not backbone:
-            img_emb, cap_emb = model.forward_emb(images, captions, lengths, cloze_labels=cloze_labels,
-                                                 image_lengths=image_lengths)
+            img_emb, cap_emb = model.forward_emb(images, captions, lengths, image_lengths=image_lengths)
         else:
-            img_emb, cap_emb = model.forward_emb(images, captions, lengths, rois=rois, cloze_labels=cloze_labels)
-        # logger.info(img_emb)
+            img_emb, cap_emb = model.forward_emb(images, captions, lengths)
 
         if img_embs is None:
             if img_emb.dim() == 3:
@@ -191,7 +187,7 @@ def eval_ensemble(results_paths, fold5=False):
                     mean_metrics[5:10])
 
 
-def evalrank(model_path, data_path=None, split='dev', fold5=False, save_path=None):
+def evalrank(model_path, data_path=None, split='dev', fold5=False, save_path=None, cxc=False):
     """
     Evaluate a trained model on either dev or test. If `fold5=True`, 5 fold
     cross-validation is done (only for MSCOCO). Otherwise, the full data is
@@ -200,12 +196,7 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False, save_path=Non
     # load model and options
     checkpoint = torch.load(model_path)
     opt = checkpoint['opt']
-    # opt.precomp_enc_type = 'backbone'
-    # opt.backbone_source = 'vsepp_imagenet'
-    # opt.data_name = 'coco_precomp'
     opt.workers = 5
-    # opt.backbone_path = 'hdfs:///home/byte_arnold_hl_vc/user/chenjiacheng/data/coco/original_updown/original_updown_backbone.pth'
-    # opt.data_path = 'hdfs:///home/byte_arnold_hl_vc/user/chenjiacheng/data/coco'
 
     logger.info(opt)
     # if data_path is not None:
@@ -218,25 +209,20 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False, save_path=Non
     vocab = tokenizer.vocab
     opt.vocab_size = len(vocab)
 
+    opt.data_path = '/tmp/data/coco'
+    opt.backbone_path = '/tmp/data/coco/original_updown/original_updown_backbone.pth'
+
     # construct model
     model = VSEModel(opt)
 
-    model.parallel_img_encoder()
+    model.make_data_parallel()
     # load model state
-    model.load_state_dict(checkpoint['model'], is_ckpt_parallel=True)
+    model.load_state_dict(checkpoint['model'])
     model.val_start()
 
     logger.info('Loading dataset')
-    if 'coco' in opt.data_name:
-        data_loader = coco_hdfs.get_test_loader(split, opt.data_name, tokenizer,
+    data_loader = image_caption.get_test_loader(split, opt.data_name, tokenizer,
                                                 opt.batch_size, opt.workers, opt)
-    else:
-        data_loader = flickr_hdfs.get_test_loader(split, opt.data_name, tokenizer,
-                                                  opt.batch_size, opt.workers, opt)
-
-    # Simulating the inference-time retrieval
-    # simulate_retrieval(model, data_loader, backbone=True, gt_entity=False)
-    # return
 
     logger.info('Computing results...')
     with torch.no_grad():
@@ -247,71 +233,72 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False, save_path=Non
     logger.info('Images: %d, Captions: %d' %
                 (img_embs.shape[0] / 5, cap_embs.shape[0]))
 
-    if not fold5:
-        # no cross-validation, full evaluation
-        img_embs = np.array([img_embs[i] for i in range(0, len(img_embs), 5)])
-        start = time.time()
-
-        sims = cosine_sim(img_embs, cap_embs)
-        npts = img_embs.shape[0]
-
-        if save_path is not None:
-            np.save(save_path, {'npts': npts, 'sims': sims})
-            logger.info('Save the similarity into {}'.format(save_path))
-
-        end = time.time()
-        logger.info("calculate similarity time:".format(end - start))
-
-        r, rt = i2t(npts, sims, return_ranks=True)
-        ri, rti = t2i(npts, sims, return_ranks=True)
-        ar = (r[0] + r[1] + r[2]) / 3
-        ari = (ri[0] + ri[1] + ri[2]) / 3
-        rsum = r[0] + r[1] + r[2] + ri[0] + ri[1] + ri[2]
-        logger.info("rsum: %.1f" % rsum)
-        logger.info("Average i2t Recall: %.1f" % ar)
-        logger.info("Image to text: %.1f %.1f %.1f %.1f %.1f" % r)
-        logger.info("Average t2i Recall: %.1f" % ari)
-        logger.info("Text to image: %.1f %.1f %.1f %.1f %.1f" % ri)
+    if cxc:
+        eval_cxc(img_embs, cap_embs)
     else:
-        # 5fold cross-validation, only for MSCOCO
-        results = []
-        for i in range(5):
-            img_embs_shard = img_embs[i * 5000:(i + 1) * 5000:5]
-            cap_embs_shard = cap_embs[i * 5000:(i + 1) * 5000]
+        if not fold5:
+            # no cross-validation, full evaluation
+            img_embs = np.array([img_embs[i] for i in range(0, len(img_embs), 5)])
             start = time.time()
-            sims = cosine_sim(img_embs_shard, cap_embs_shard)
+
+            sims = compute_sim(img_embs, cap_embs)
+            npts = img_embs.shape[0]
+
+            if save_path is not None:
+                np.save(save_path, {'npts': npts, 'sims': sims})
+                logger.info('Save the similarity into {}'.format(save_path))
+
             end = time.time()
             logger.info("calculate similarity time:".format(end - start))
 
-            npts = img_embs_shard.shape[0]
-            r, rt0 = i2t(npts, sims, return_ranks=True)
-            logger.info("Image to text: %.1f, %.1f, %.1f, %.1f, %.1f" % r)
-            ri, rti0 = t2i(npts, sims, return_ranks=True)
-            logger.info("Text to image: %.1f, %.1f, %.1f, %.1f, %.1f" % ri)
-
-            if i == 0:
-                rt, rti = rt0, rti0
+            r, rt = i2t(npts, sims, return_ranks=True)
+            ri, rti = t2i(npts, sims, return_ranks=True)
             ar = (r[0] + r[1] + r[2]) / 3
             ari = (ri[0] + ri[1] + ri[2]) / 3
             rsum = r[0] + r[1] + r[2] + ri[0] + ri[1] + ri[2]
-            logger.info("rsum: %.1f ar: %.1f ari: %.1f" % (rsum, ar, ari))
-            results += [list(r) + list(ri) + [ar, ari, rsum]]
+            logger.info("rsum: %.1f" % rsum)
+            logger.info("Average i2t Recall: %.1f" % ar)
+            logger.info("Image to text: %.1f %.1f %.1f %.1f %.1f" % r)
+            logger.info("Average t2i Recall: %.1f" % ari)
+            logger.info("Text to image: %.1f %.1f %.1f %.1f %.1f" % ri)
+        else:
+            # 5fold cross-validation, only for MSCOCO
+            results = []
+            for i in range(5):
+                img_embs_shard = img_embs[i * 5000:(i + 1) * 5000:5]
+                cap_embs_shard = cap_embs[i * 5000:(i + 1) * 5000]
+                start = time.time()
+                sims = compute_sim(img_embs_shard, cap_embs_shard)
+                end = time.time()
+                logger.info("calculate similarity time:".format(end - start))
 
-        logger.info("-----------------------------------")
-        logger.info("Mean metrics: ")
-        mean_metrics = tuple(np.array(results).mean(axis=0).flatten())
-        logger.info("rsum: %.1f" % (mean_metrics[12]))
-        logger.info("Average i2t Recall: %.1f" % mean_metrics[10])
-        logger.info("Image to text: %.1f %.1f %.1f %.1f %.1f" %
-                    mean_metrics[:5])
-        logger.info("Average t2i Recall: %.1f" % mean_metrics[11])
-        logger.info("Text to image: %.1f %.1f %.1f %.1f %.1f" %
-                    mean_metrics[5:10])
+                npts = img_embs_shard.shape[0]
+                r, rt0 = i2t(npts, sims, return_ranks=True)
+                logger.info("Image to text: %.1f, %.1f, %.1f, %.1f, %.1f" % r)
+                ri, rti0 = t2i(npts, sims, return_ranks=True)
+                logger.info("Text to image: %.1f, %.1f, %.1f, %.1f, %.1f" % ri)
 
-    torch.save({'rt': rt, 'rti': rti}, 'ranks.pth.tar')
+                if i == 0:
+                    rt, rti = rt0, rti0
+                ar = (r[0] + r[1] + r[2]) / 3
+                ari = (ri[0] + ri[1] + ri[2]) / 3
+                rsum = r[0] + r[1] + r[2] + ri[0] + ri[1] + ri[2]
+                logger.info("rsum: %.1f ar: %.1f ari: %.1f" % (rsum, ar, ari))
+                results += [list(r) + list(ri) + [ar, ari, rsum]]
+
+            logger.info("-----------------------------------")
+            logger.info("Mean metrics: ")
+            mean_metrics = tuple(np.array(results).mean(axis=0).flatten())
+            logger.info("rsum: %.1f" % (mean_metrics[12]))
+            logger.info("Average i2t Recall: %.1f" % mean_metrics[10])
+            logger.info("Image to text: %.1f %.1f %.1f %.1f %.1f" %
+                        mean_metrics[:5])
+            logger.info("Average t2i Recall: %.1f" % mean_metrics[11])
+            logger.info("Text to image: %.1f %.1f %.1f %.1f %.1f" %
+                        mean_metrics[5:10])
 
 
-def cosine_sim(images, captions):
+def compute_sim(images, captions):
     similarities = np.matmul(images, np.matrix.transpose(captions))
     return similarities
 
@@ -342,14 +329,12 @@ def i2t(npts, sims, return_ranks=False, mode='coco'):
             top1[index] = inds[0]
 
     # Compute metrics
-    try:
-        r1 = 100.0 * len(np.where(ranks < 1)[0]) / len(ranks)
-        r5 = 100.0 * len(np.where(ranks < 5)[0]) / len(ranks)
-        r10 = 100.0 * len(np.where(ranks < 10)[0]) / len(ranks)
-        medr = np.floor(np.median(ranks)) + 1
-        meanr = ranks.mean() + 1
-    except:
-        pdb.set_trace()
+    r1 = 100.0 * len(np.where(ranks < 1)[0]) / len(ranks)
+    r5 = 100.0 * len(np.where(ranks < 5)[0]) / len(ranks)
+    r10 = 100.0 * len(np.where(ranks < 10)[0]) / len(ranks)
+    medr = np.floor(np.median(ranks)) + 1
+    meanr = ranks.mean() + 1
+
     if return_ranks:
         return (r1, r5, r10, medr, meanr), (ranks, top1)
     else:
@@ -397,3 +382,115 @@ def t2i(npts, sims, return_ranks=False, mode='coco'):
         return (r1, r5, r10, medr, meanr), (ranks, top1)
     else:
         return (r1, r5, r10, medr, meanr)
+
+
+### CxC related evaluation.
+def eval_cxc(images, captions):
+    import os
+    import json
+    cxc_annot_base = '/tmp/data/coco/cxc_annots'
+    img_id_path = '/tmp/data/coco/precomp/testall_ids.txt'
+    cap_id_path = '/tmp/data/coco/precomp/testall_capids.txt'
+
+    images = images[::5, :]
+
+    with open(img_id_path) as f:
+        img_ids = f.readlines()
+    with open(cap_id_path) as f:
+        cap_ids = f.readlines()
+
+    img_ids = [img_id.strip() for i, img_id in enumerate(img_ids) if i % 5 == 0]
+    cap_ids = [cap_id.strip() for cap_id in cap_ids]
+
+    with open(os.path.join(cxc_annot_base, 'cxc_it.json')) as f_it:
+        cxc_it = json.load(f_it)
+    with open(os.path.join(cxc_annot_base, 'cxc_i2i.json')) as f_i2i:
+        cxc_i2i = json.load(f_i2i)
+    with open(os.path.join(cxc_annot_base, 'cxc_t2t.json')) as f_t2t:
+        cxc_t2t = json.load(f_t2t)
+
+
+    sims = compute_sim(images, captions)
+    
+    #t2i_recalls = cxc_inter(sims.T, img_ids, cap_ids, cxc_it['t2i'])
+    #i2t_recalls = cxc_inter(sims, cap_ids, img_ids, cxc_it['i2t'])
+    #logger.info('T2I R@1: {}, R@5: {}, R@10: {}'.format(*t2i_recalls))
+    #logger.info('I2T R@1: {}, R@5: {}, R@10: {}'.format(*i2t_recalls))
+
+    i2i_recalls = cxc_intra(images, img_ids, cxc_i2i)
+    t2t_recalls = cxc_intra(captions, cap_ids, cxc_t2t, text=True)
+    logger.info('I2I R@1: {}, R@5: {}, R@10: {}'.format(*i2i_recalls))
+    logger.info('T2T R@1: {}, R@5: {}, R@10: {}'.format(*t2t_recalls))
+
+
+def cxc_inter(sims, data_ids, query_ids, annot):
+    ranks = list()
+    for idx, query_id in enumerate(query_ids):
+        if query_id not in annot:
+            raise ValueError('unexpected query id {}'.format(query_id))
+        pos_data_ids = annot[query_id]
+        pos_data_ids = [pos_data_id for pos_data_id in pos_data_ids if str(pos_data_id[0]) in data_ids]
+        pos_data_indices = [data_ids.index(str(pos_data_id[0])) for pos_data_id in pos_data_ids]
+        rank = 1e20
+        inds = np.argsort(sims[idx])[::-1]
+        for pos_data_idx in pos_data_indices:
+            tmp = np.where(inds == pos_data_idx)[0][0]
+            if tmp < rank:
+                rank = tmp
+        ranks.append(rank)
+    ranks = np.array(ranks)
+    r1 = 100.0 * len(np.where(ranks < 1)[0]) / len(ranks)
+    r5 = 100.0 * len(np.where(ranks < 5)[0]) / len(ranks)
+    r10 = 100.0 * len(np.where(ranks < 10)[0]) / len(ranks)
+    return (r1, r5, r10)
+
+
+def cxc_intra(embs, data_ids, annot, text=False):
+    if not text:
+        pos_indices = list()
+        for idx, data_id in enumerate(data_ids):
+            sim_items = annot[data_id]
+            pos_items = [item for item in sim_items if item[1] >= 3.0]
+            if len(pos_items) > 0:
+                pos_indices.append(idx)
+        logger.info('There are {} examples with positive annotation'.format(len(pos_indices)))
+
+        data_ids = [data_ids[idx] for idx in pos_indices]
+        embs = embs[np.array(pos_indices), :]
+
+    sims = compute_sim(embs, embs)
+    np.fill_diagonal(sims, 0)
+    import pdb; pdb.set_trace()
+
+    ranks = list()
+    for idx, data_id in enumerate(data_ids):
+        sim_items = annot[data_id]
+        pos_items = [item for item in sim_items if item[1] >= 3.0]
+        rank = 1e20
+        inds = np.argsort(sims[idx])[::-1]
+        if text:
+            coco_pos = list(range(idx//5 * 5, (idx//5+1) * 5))
+            coco_pos.remove(idx)
+            pos_indices = coco_pos
+            pos_indices.extend([data_ids.index(str(pos_item[0])) for pos_item in pos_items])
+        else:
+            #all_indices = [data_ids.index(str(item[0])) for item in sim_items]
+            pos_indices = [data_ids.index(str(pos_item[0])) for pos_item in pos_items]
+            if len(pos_indices) == 0:
+                continue
+            #inds = list(inds)
+            #inds = np.array(list(filter(lambda x: x in all_indices,inds)))
+        for pos_idx in pos_indices:
+            tmp = np.where(inds == pos_idx)[0][0]
+            if tmp < rank:
+                rank = tmp
+        ranks.append(rank)
+
+    ranks = np.array(ranks)
+    r1 = 100.0 * len(np.where(ranks < 1)[0]) / len(ranks)
+    r5 = 100.0 * len(np.where(ranks < 5)[0]) / len(ranks)
+    r10 = 100.0 * len(np.where(ranks < 10)[0]) / len(ranks)
+    import pdb; pdb.set_trace()
+    return (r1, r5, r10)
+
+

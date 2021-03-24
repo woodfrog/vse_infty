@@ -24,7 +24,7 @@ class ContrastiveLoss(nn.Module):
 
     def forward(self, im, s):
         # compute image-sentence score matrix
-        scores = normal_sim(im, s)
+        scores = get_sim(im, s)
         diagonal = scores.diag().view(im.size(0), 1)
         d1 = diagonal.expand_as(scores)
         d2 = diagonal.t().expand_as(scores)
@@ -46,17 +46,13 @@ class ContrastiveLoss(nn.Module):
 
         # keep the maximum violating negative for each query
         if self.max_violation:
-            # if self.opt.viz:
-            #     s_hardest_index = cost_s.argmax(1)
-            #     im_hardest_index = cost_im.argmax(0)
-            #     pdb.set_trace()
             cost_s = cost_s.max(1)[0]
             cost_im = cost_im.max(0)[0]
 
         return cost_s.sum() + cost_im.sum()
 
 
-def normal_sim(images, captions):
+def get_sim(images, captions):
     similarities = images.mm(captions.t())
     return similarities
 

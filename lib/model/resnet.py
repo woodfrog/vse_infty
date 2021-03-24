@@ -3,22 +3,14 @@ import torch
 import torch.nn as nn
 import math
 
-from lib.utils.hdfs_utils import torch_load
-
 import torch.utils.model_zoo as model_zoo
-
-import pdb
-
 import logging
 
 logger = logging.getLogger(__name__)
 
-__all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
-           'resnet152']
+__all__ = ['ResNet', 'resnet50', 'resnet101', 'resnet152']
 
 model_urls = {
-    'resnet18': 'https://s3.amazonaws.com/pytorch/models/resnet18-5c106cde.pth',
-    'resnet34': 'https://s3.amazonaws.com/pytorch/models/resnet34-333f7ec4.pth',
     'resnet50': 'https://s3.amazonaws.com/pytorch/models/resnet50-19c8e357.pth',
     'resnet101': 'https://s3.amazonaws.com/pytorch/models/resnet101-5d3b4d8f.pth',
     'resnet152': 'https://s3.amazonaws.com/pytorch/models/resnet152-b121ed2d.pth',
@@ -115,8 +107,7 @@ class ResNet(nn.Module):
         self.layer2 = self._make_layer(block, 128 * width_mult, layers[1], stride=2)
         self.layer3 = self._make_layer(block, 256 * width_mult, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 512 * width_mult, layers[3], stride=2)
-        # it is slightly better whereas slower to set stride = 1
-        # self.layer4 = self._make_layer(block, 512, layers[3], stride=1)
+
         self.avgpool = nn.AvgPool2d(7)
         self.fc = nn.Linear(512 * block.expansion * width_mult, num_classes)
 
@@ -161,28 +152,6 @@ class ResNet(nn.Module):
         x = self.fc(x)
 
         return x
-
-
-def resnet18(pretrained=False):
-    """Constructs a ResNet-18 model.
-    Args:
-      pretrained (bool): If True, returns a model pre-trained on ImageNet
-    """
-    model = ResNet(BasicBlock, [2, 2, 2, 2])
-    if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['resnet18']))
-    return model
-
-
-def resnet34(pretrained=False):
-    """Constructs a ResNet-34 model.
-    Args:
-      pretrained (bool): If True, returns a model pre-trained on ImageNet
-    """
-    model = ResNet(BasicBlock, [3, 4, 6, 3])
-    if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['resnet34']))
-    return model
 
 
 def resnet50(pretrained=False, width_mult=1):
@@ -255,7 +224,7 @@ class ResnetFeatureExtractor(nn.Module):
                     logger.info(
                         'Loading pretrained backbone weights from {} for backbone source {}'.format(self.weights_path,
                                                                                                     self.backbone_source))
-                    backbone_ckpt = torch_load(self.weights_path)
+                    backbone_ckpt = torch.load(self.weights_path)
                     self.base.load_state_dict(backbone_ckpt['base'])
                     self.top.load_state_dict(backbone_ckpt['top'])
                 else:
@@ -304,7 +273,7 @@ class ResnetFeatureExtractor(nn.Module):
             p.requires_grad = False
 
     def train(self, mode=True):
-        # Override train so that the training mode is set as we want
+        # Override train so that the training mode is set as we want (BN does not update the running stats)
         nn.Module.train(self, mode)
         if mode:
             # fix all bn layers
@@ -320,10 +289,7 @@ class ResnetFeatureExtractor(nn.Module):
         fc7 = self.top(pool5).mean(3).mean(2)
         return fc7
 
-    def forward(self, im_data, entities=None, lengths=None):
-        return self.forward_without_entity(im_data)
-
-    def forward_without_entity(self, im_data):
+    def forward(self, im_data):
         b_s = im_data.size(0)
         base_feat = self.base(im_data)
         top_feat = self.top(base_feat)
@@ -341,4 +307,4 @@ if __name__ == '__main__':
 
     model = resnet50(pretrained=False, width_mult=1)
     num_params = count_params(model)
-    pdb.set_trace()
+
