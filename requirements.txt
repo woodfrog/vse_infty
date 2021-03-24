@@ -10,10 +10,7 @@ matplotlib==3.3.3
 nltk==3.5
 opencv-python==4.5.1.48
 Pillow==8.0.1
-protobuf==3.14.0
-pycocotools==2.0.2
 PyYAML==5.3.1
-requests==2.25.1
 scikit-learn==0.24.1
 scipy==1.6.0
 six==1.15.0

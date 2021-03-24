@@ -6,7 +6,7 @@ import os.path as osp
 import numpy as np
 from imageio import imread
 import random
-import pickle
+import json
 import cv2
 
 import logging
@@ -29,16 +29,14 @@ class RawImageDataset(data.Dataset):
 
         loc_cap = osp.join(data_path, 'precomp')
         loc_image = osp.join(data_path, 'precomp')
+        loc_mapping = osp.join(data_path, 'id_mapping.json')
         if 'coco' in data_name:
-            loc_mapping = osp.join(data_path, 'original_updown/id_mapping.pkl')
             self.image_base = osp.join(data_path, 'images')
         else:
-            loc_mapping = osp.join(data_path, 'id_mapping.pkl')
             self.image_base = osp.join(data_path, 'flickr30k-images')
 
-        with open(loc_mapping, 'rb') as f_mapping:
-            self.id_to_path = pickle.load(f_mapping)
-
+        with open(loc_mapping, 'r') as f_mapping:
+            self.id_to_path = json.load(f_mapping)
 
         # Read Captions
         self.captions = []
@@ -94,7 +92,7 @@ class RawImageDataset(data.Dataset):
             target = process_caption(self.tokenizer, caption_tokens, False)
 
         image_id = self.images[img_index]
-        image_path = os.path.join(self.image_base, self.id_to_path[image_id])
+        image_path = os.path.join(self.image_base, self.id_to_path[str(image_id)])
         im_in = np.array(imread(image_path))
         processed_image = self._process_image(im_in)
         image = torch.Tensor(processed_image)
