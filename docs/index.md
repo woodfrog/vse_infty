@@ -1,5 +1,6 @@
 ---
 layout: default
+title: Learning the Best Pooling Strategy for Visual Semantic Embedding
 ---
 
 # Abstract
