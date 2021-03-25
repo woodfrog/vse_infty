@@ -1,6 +1,6 @@
-DATA_PATH='data/features'
+DATASET_NAME='coco'
+DATA_PATH='data/'${DATASET_NAME}
 VOCAB_PATH='data/vocab'
-DATASET_NAME='coco_precomp'
 
 CUDA_VISIBLE_DEVICES=0,1,2,3 python3 train.py \
   --data_path ${DATA_PATH} --data_name ${DATASET_NAME} --vocab_path ${VOCAB_PATH} \

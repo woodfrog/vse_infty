@@ -25,57 +25,34 @@ def positional_encoding_1d(d_model, length):
 
 
 class GPO(nn.Module):
-    def __init__(self, d_pe, d_hidden, pe_mode='sin', decode_mode='seq'):
+    def __init__(self, d_pe, d_hidden):
         super(GPO, self).__init__()
         self.d_pe = d_pe
         self.d_hidden = d_hidden
-        self.pe_mode = pe_mode
-        self.decode_mode = decode_mode
-        assert pe_mode in ['sin', 'learn', 'index']
-        assert decode_mode in ['seq', 'interp']
 
-        if pe_mode == 'learn':
-            self.pe_embedding = nn.Embedding(1000, self.d_pe)
-        else:
-            self.pe_database = {}
-        if decode_mode == 'seq':
-            self.gru = nn.GRU(self.d_pe, d_hidden, 1, batch_first=True, bidirectional=True)
-            self.linear = nn.Linear(self.d_hidden, 1, bias=False)
-        else:
-            self.n_pieces = 20
-            self.weight = nn.Parameter(torch.zeros(1, self.n_pieces + 1) + 1.0 / self.n_pieces)
+        self.pe_database = {}
+        self.gru = nn.GRU(self.d_pe, d_hidden, 1, batch_first=True, bidirectional=True)
+        self.linear = nn.Linear(self.d_hidden, 1, bias=False)
 
     def compute_pool_weights(self, lengths, features):
-        if self.decode_mode == 'seq':
-            max_len = int(lengths.max())
-            pe_max_len = self.get_pe(max_len)
-            pes = pe_max_len.unsqueeze(0).repeat(lengths.size(0), 1, 1).to(lengths.device)
-            mask = torch.arange(max_len).expand(lengths.size(0), max_len).to(lengths.device)
-            mask = (mask < lengths.long().unsqueeze(1)).unsqueeze(-1)
-            pes = pes.masked_fill(mask == 0, 0)
+        max_len = int(lengths.max())
+        pe_max_len = self.get_pe(max_len)
+        pes = pe_max_len.unsqueeze(0).repeat(lengths.size(0), 1, 1).to(lengths.device)
+        mask = torch.arange(max_len).expand(lengths.size(0), max_len).to(lengths.device)
+        mask = (mask < lengths.long().unsqueeze(1)).unsqueeze(-1)
+        pes = pes.masked_fill(mask == 0, 0)
 
-            self.gru.flatten_parameters()
-            packed = pack_padded_sequence(pes, lengths, batch_first=True, enforce_sorted=False)
-            out, _ = self.gru(packed)
-            padded = pad_packed_sequence(out, batch_first=True)
-            out_emb, out_len = padded
-            out_emb = (out_emb[:, :, :out_emb.size(2) // 2] + out_emb[:, :, out_emb.size(2) // 2:]) / 2
-            scores = self.linear(out_emb)
-            scores[torch.where(mask == 0)] = -10000
+        self.gru.flatten_parameters()
+        packed = pack_padded_sequence(pes, lengths.cpu(), batch_first=True, enforce_sorted=False)
+        out, _ = self.gru(packed)
+        padded = pad_packed_sequence(out, batch_first=True)
+        out_emb, out_len = padded
+        out_emb = (out_emb[:, :, :out_emb.size(2) // 2] + out_emb[:, :, out_emb.size(2) // 2:]) / 2
+        scores = self.linear(out_emb)
+        scores[torch.where(mask == 0)] = -10000
 
-            weights = torch.softmax(scores / 0.1, 1)
-            return weights, mask
-        else:
-            sizes, mask = self.fill_sizes(lengths)
-
-            # turn continuous into concrete weights
-            weights = self.determine_weight(sizes)
-            weights = weights.squeeze().unsqueeze(-1)
-            weights[torch.where(mask == 0)] = -10000
-            weights = torch.softmax(weights / 0.1, 1)
-
-            mask = mask.bool()
-            return weights, mask
+        weights = torch.softmax(scores / 0.1, 1)
+        return weights, mask
 
     def forward(self, features, lengths):
         """
@@ -100,22 +77,12 @@ class GPO(nn.Module):
         :return: the positional encoding of the given length
         """
         length = int(length)
-        if self.pe_mode == 'sin':
-            if length in self.pe_database:
-                return self.pe_database[length]
-            else:
-                pe = positional_encoding_1d(self.d_pe, length)
-                self.pe_database[length] = pe
-                return pe
-        elif self.pe_mode == 'learn':
-            device = list(self.pe_embedding.parameters())[0].device
-            pos_idx = torch.arange(length, device=device)
-            pe = self.pe_embedding(pos_idx)
-            return pe
+        if length in self.pe_database:
+            return self.pe_database[length]
         else:
-            pe = torch.zeros([length, self.d_pe])
+            pe = positional_encoding_1d(self.d_pe, length)
+            self.pe_database[length] = pe
             return pe
-
 
     @staticmethod
     def fill_sizes(sizes):
