@@ -199,8 +199,6 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False, save_path=Non
     opt.workers = 5
 
     logger.info(opt)
-    # if data_path is not None:
-    #    opt.data_path = data_path
     if not hasattr(opt, 'caption_loss'):
         opt.caption_loss = False
 
@@ -209,8 +207,10 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False, save_path=Non
     vocab = tokenizer.vocab
     opt.vocab_size = len(vocab)
 
-    opt.data_path = '/tmp/data/coco'
-    opt.backbone_path = '/tmp/data/coco/original_updown/original_updown_backbone.pth'
+    opt.data_path = 'data/coco'
+    opt.backbone_path = 'data/weights/original_updown_backbone.pth'
+    if data_path is not None:
+        opt.data_path = data_path
 
     # construct model
     model = VSEModel(opt)
@@ -388,9 +388,9 @@ def t2i(npts, sims, return_ranks=False, mode='coco'):
 def eval_cxc(images, captions):
     import os
     import json
-    cxc_annot_base = '/tmp/data/coco/cxc_annots'
-    img_id_path = '/tmp/data/coco/precomp/testall_ids.txt'
-    cap_id_path = '/tmp/data/coco/precomp/testall_capids.txt'
+    cxc_annot_base = 'data/coco/cxc_annots'
+    img_id_path = 'data/coco/precomp/testall_ids.txt'
+    cap_id_path = 'data/coco/precomp/testall_capids.txt'
 
     images = images[::5, :]
 
@@ -411,7 +411,6 @@ def eval_cxc(images, captions):
 
 
     sims = compute_sim(images, captions)
-    
     #t2i_recalls = cxc_inter(sims.T, img_ids, cap_ids, cxc_it['t2i'])
     #i2t_recalls = cxc_inter(sims, cap_ids, img_ids, cxc_it['i2t'])
     #logger.info('T2I R@1: {}, R@5: {}, R@10: {}'.format(*t2i_recalls))

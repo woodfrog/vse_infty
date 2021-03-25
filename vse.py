@@ -123,7 +123,7 @@ class EncoderImageAggr(nn.Module):
             if name in own_state:
                 new_state[name] = param
 
-        super(EncoderImageAggr, self).load_state_dict(new_state)
+        super(EncoderImageAggr, self).load_state_dict(new_state, strict=False)
 
 
 class EncoderImageFull(nn.Module):
@@ -188,7 +188,7 @@ class EncoderImageFull(nn.Module):
         for name, param in state_dict.items():
             if name in own_state:
                 new_state[name] = param
-        super(EncoderImageFull, self).load_state_dict(new_state)
+        super(EncoderImageFull, self).load_state_dict(new_state, strict=False)
 
 
 # Language Model with BERT
@@ -204,12 +204,13 @@ class EncoderText(nn.Module):
         self.gpool = GPO(32, 32)
 
     def load_state_dict(self, state_dict):
+        logger.info('Here we are.')
         own_keys = list(self.state_dict().keys())
         new_state = OrderedDict()
         for k, v in state_dict.items():
             new_state[k] = v
         assert len(new_state) == len(own_keys)
-        super(EncoderText, self).load_state_dict(new_state)
+        super(EncoderText, self).load_state_dict(new_state, strict=False)
 
     def forward(self, x, lengths):
         """Handles variable size captions
@@ -326,8 +327,8 @@ class VSEModel(object):
         return state_dict
 
     def load_state_dict(self, state_dict):
-        self.img_enc.load_state_dict(state_dict[0])
-        self.txt_enc.load_state_dict(state_dict[1])
+        self.img_enc.load_state_dict(state_dict[0], strict=False)
+        self.txt_enc.load_state_dict(state_dict[1], strict=False)
 
     def train_start(self):
         """switch to train mode
