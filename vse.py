@@ -113,18 +113,6 @@ class EncoderImageAggr(nn.Module):
 
         return features
 
-    def load_state_dict(self, state_dict):
-        """Copies parameters. overwritting the default one to
-        accept state_dict from Full model
-        """
-        own_state = self.state_dict()
-        new_state = OrderedDict()
-        for name, param in state_dict.items():
-            if name in own_state:
-                new_state[name] = param
-
-        super(EncoderImageAggr, self).load_state_dict(new_state, strict=False)
-
 
 class EncoderImageFull(nn.Module):
     def __init__(self, backbone_cnn, img_dim, embed_size, opt, no_imgnorm=False):
@@ -179,17 +167,6 @@ class EncoderImageFull(nn.Module):
         self.backbone.unfreeze_base()
         logger.info('Backbone unfreezed, fixed blocks {}'.format(self.backbone.get_fixed_blocks()))
 
-    def load_state_dict(self, state_dict):
-        """Copies parameters. overwritting the default one to
-        accept state_dict from Full model
-        """
-        own_state = self.state_dict()
-        new_state = OrderedDict()
-        for name, param in state_dict.items():
-            if name in own_state:
-                new_state[name] = param
-        super(EncoderImageFull, self).load_state_dict(new_state, strict=False)
-
 
 # Language Model with BERT
 class EncoderText(nn.Module):
@@ -202,15 +179,6 @@ class EncoderText(nn.Module):
         self.bert = BertModel.from_pretrained('bert-base-uncased')
         self.linear = nn.Linear(768, embed_size)
         self.gpool = GPO(32, 32)
-
-    def load_state_dict(self, state_dict):
-        logger.info('Here we are.')
-        own_keys = list(self.state_dict().keys())
-        new_state = OrderedDict()
-        for k, v in state_dict.items():
-            new_state[k] = v
-        assert len(new_state) == len(own_keys)
-        super(EncoderText, self).load_state_dict(new_state, strict=False)
 
     def forward(self, x, lengths):
         """Handles variable size captions
