@@ -1,16 +1,16 @@
 """Evaluation"""
 from __future__ import print_function
 import _init_paths
-
-from datasets import image_caption
-from collections import OrderedDict
+import logging
 import time
 import torch
-from transformers import BertTokenizer
-from vse import VSEModel
-
 import numpy as np
-import logging
+
+from collections import OrderedDict
+from transformers import BertTokenizer
+
+from lib.datasets import image_caption
+from lib.vse import VSEModel
 
 logger = logging.getLogger(__name__)
 
@@ -459,7 +459,6 @@ def cxc_intra(embs, data_ids, annot, text=False):
 
     sims = compute_sim(embs, embs)
     np.fill_diagonal(sims, 0)
-    import pdb; pdb.set_trace()
 
     ranks = list()
     for idx, data_id in enumerate(data_ids):
@@ -489,7 +488,4 @@ def cxc_intra(embs, data_ids, annot, text=False):
     r1 = 100.0 * len(np.where(ranks < 1)[0]) / len(ranks)
     r5 = 100.0 * len(np.where(ranks < 5)[0]) / len(ranks)
     r10 = 100.0 * len(np.where(ranks < 10)[0]) / len(ranks)
-    import pdb; pdb.set_trace()
     return (r1, r5, r10)
-
-

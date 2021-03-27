@@ -1,7 +1,6 @@
 import os
-import evaluation
-
 import logging
+from lib import evaluation
 
 logging.basicConfig()
 logger = logging.getLogger()
@@ -12,8 +11,9 @@ def main():
     split = 'testall'
     # bases = ['runs/coco_entity_bert_var_gpool_local/', ]
     bases = [
-        # 'data/weights/runs/coco_vsepp_updown_bert_var_gpool/',
-        'data/weights/runs/coco_vsepp_wsl_bert_var_gpool/',
+        'data/weights/runs/coco_vsepp_updown_bert_var_gpool/',
+        # 'data/weights/runs/coco_vsepp_wsl_bert_var_gpool/',
+        # 'data/weights/runs/coco_vsepp_wsl_bert_var_gpool_2/',
         # 'data/weights/runs/coco_entity_bert_var_gpool',
     ]
     for base in bases:

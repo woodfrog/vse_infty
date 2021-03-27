@@ -2,16 +2,13 @@
 import _init_paths
 import os
 import time
-
+import numpy as np
 import torch
 from transformers import BertTokenizer
-import numpy
 
-import numpy as np
-from datasets import image_caption
-import vse
-from vse import VSEModel
-from evaluation import i2t, t2i, AverageMeter, LogCollector, encode_data, compute_sim
+from lib.datasets import image_caption
+from lib.vse import VSEModel
+from lib.evaluation import i2t, t2i, AverageMeter, LogCollector, encode_data, compute_sim
 
 import logging
 import tensorboard_logger as tb_logger
@@ -178,15 +175,6 @@ def train(opt, train_loader, model, epoch, val_loader):
                     .format(
                     epoch, i, len(train_loader.dataset) // train_loader.batch_size + 1, batch_time=batch_time,
                     data_time=data_time, e_log=str(model.logger)))
-            if model.Eiters % (5 * opt.log_step) == 0:
-                pool_weights = vse.gpool_weights_img
-                pool_weights_text = vse.gpool_weights_text
-                weights = pool_weights.tolist()
-                weight_strs = [str(num)[:5] if num >= 0.001 else str(0) for num in weights]
-                logging.info('pooling weights {}'.format(weight_strs))
-                weights_txt = pool_weights_text[0].tolist()
-                weight_strs = [str(num)[:5] if num >= 0.001 else str(0) for num in weights_txt]
-                logging.info('pooling weights text len {}: {}'.format(pool_weights_text[1], weight_strs))
 
         # Record logs in tensorboard
         tb_logger.log_value('epoch', epoch, step=model.Eiters)
@@ -204,7 +192,7 @@ def validate(opt, val_loader, model):
         img_embs, cap_embs = encode_data(
             model, val_loader, opt.log_step, logging.info, backbone=opt.precomp_enc_type == 'backbone')
 
-    img_embs = numpy.array([img_embs[i] for i in range(0, len(img_embs), 5)])
+    img_embs = np.array([img_embs[i] for i in range(0, len(img_embs), 5)])
 
     start = time.time()
     sims = compute_sim(img_embs, cap_embs)
