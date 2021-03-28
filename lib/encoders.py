@@ -80,6 +80,7 @@ class EncoderImageAggr(nn.Module):
         self.embed_size = embed_size
         self.no_imgnorm = no_imgnorm
         self.fc = nn.Linear(img_dim, embed_size)
+        self.precomp_enc_type = precomp_enc_type
         if precomp_enc_type == 'basic':
             self.mlp = MLP(img_dim, embed_size // 2, embed_size, 2)
         self.gpool = GPO(32, 32)
