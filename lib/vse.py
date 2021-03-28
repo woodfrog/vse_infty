@@ -22,8 +22,10 @@ class VSEModel(object):
     def __init__(self, opt):
         # Build Models
         self.grad_clip = opt.grad_clip
-        self.img_enc = get_image_encoder(opt.data_name, opt.img_dim, opt.embed_size, opt,
+        self.img_enc = get_image_encoder(opt.data_name, opt.img_dim, opt.embed_size,
                                          precomp_enc_type=opt.precomp_enc_type,
+                                         backbone_source=opt.backbone_source,
+                                         backbone_path=opt.backbone_path,
                                          no_imgnorm=opt.no_imgnorm)
         self.txt_enc = get_text_encoder(opt.embed_size, no_txtnorm=opt.no_txtnorm)
         if torch.cuda.is_available():

@@ -57,17 +57,17 @@ def get_text_encoder(embed_size, no_txtnorm=False):
     return EncoderText(embed_size, no_txtnorm=no_txtnorm)
 
 
-def get_image_encoder(data_name, img_dim, embed_size, opt, precomp_enc_type='basic',
-                      no_imgnorm=False):
+def get_image_encoder(data_name, img_dim, embed_size, precomp_enc_type='basic',
+                      backbone_source=None, backbone_path=None, no_imgnorm=False):
     """A wrapper to image encoders. Chooses between an different encoders
     that uses precomputed image features.
     """
     if precomp_enc_type == 'basic':
         img_enc = EncoderImageAggr(
-            img_dim, embed_size, opt, no_imgnorm)
+            img_dim, embed_size, precomp_enc_type, no_imgnorm)
     elif precomp_enc_type == 'backbone':
-        backbone_cnn = ResnetFeatureExtractor(opt.backbone_source, opt.backbone_path, fixed_blocks=2)
-        img_enc = EncoderImageFull(backbone_cnn, img_dim, embed_size, opt, no_imgnorm)
+        backbone_cnn = ResnetFeatureExtractor(backbone_source, backbone_path, fixed_blocks=2)
+        img_enc = EncoderImageFull(backbone_cnn, img_dim, embed_size, precomp_enc_type, no_imgnorm)
     else:
         raise ValueError("Unknown precomp_enc_type: {}".format(precomp_enc_type))
 
@@ -75,15 +75,14 @@ def get_image_encoder(data_name, img_dim, embed_size, opt, precomp_enc_type='bas
 
 
 class EncoderImageAggr(nn.Module):
-    def __init__(self, img_dim, embed_size, opt, no_imgnorm=False):
+    def __init__(self, img_dim, embed_size, precomp_enc_type='basic', no_imgnorm=False):
         super(EncoderImageAggr, self).__init__()
         self.embed_size = embed_size
         self.no_imgnorm = no_imgnorm
         self.fc = nn.Linear(img_dim, embed_size)
-        if opt.precomp_enc_type == 'basic':
+        if precomp_enc_type == 'basic':
             self.mlp = MLP(img_dim, embed_size // 2, embed_size, 2)
         self.gpool = GPO(32, 32)
-        self.opt = opt
         self.init_weights()
 
     def init_weights(self):
@@ -97,7 +96,7 @@ class EncoderImageAggr(nn.Module):
     def forward(self, images, image_lengths):
         """Extract image feature vectors."""
         features = self.fc(images)
-        if self.opt.precomp_enc_type == 'basic':
+        if self.precomp_enc_type == 'basic':
             features = self.mlp(images) + features
 
         features, pool_weights = self.gpool(features, image_lengths)
@@ -108,11 +107,10 @@ class EncoderImageAggr(nn.Module):
         return features
 
 class EncoderImageFull(nn.Module):
-    def __init__(self, backbone_cnn, img_dim, embed_size, opt, no_imgnorm=False):
+    def __init__(self, backbone_cnn, img_dim, embed_size, precomp_enc_type='basic', no_imgnorm=False):
         super(EncoderImageFull, self).__init__()
         self.backbone = backbone_cnn
-        self.image_encoder = EncoderImageAggr(img_dim, embed_size, opt, no_imgnorm)
-        self.opt = opt
+        self.image_encoder = EncoderImageAggr(img_dim, embed_size, precomp_enc_type, no_imgnorm)
         self.backbone_freezed = False
 
     def forward(self, images):
