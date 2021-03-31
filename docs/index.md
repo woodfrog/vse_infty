@@ -17,12 +17,12 @@ Without bells and whistles, *VSE∞* outperforms previous VSE methods significan
 
 <div>
 	<a href="assets/xxx.pdf">
-	<img class="thumbnail" src="assets/img/xxx.png"> 
+	<img class="thumbnail" src="assets/img/thumbnail.png"> 
 	</a>
 </div>>
 
 <div class="text-center">
-	<a href="assets/xxxx.pdf"> Download PDF </a> &nbsp; &nbsp; <a href="https://arxiv.org/abs/2011.04305"> Arxiv </a> &nbsp; &nbsp; <a href="assets/xxxx.pdf"> Supplementary </a>
+	<a href="assets/vse_infty.pdf"> Download PDF </a> &nbsp; &nbsp; <a href="https://arxiv.org/abs/2011.04305"> Arxiv </a> &nbsp; &nbsp; <a href="assets/vse_infty_supp.pdf"> Supplementary </a>
 </div>
 
 <br>
