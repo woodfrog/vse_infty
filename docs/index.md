@@ -16,7 +16,7 @@ Without bells and whistles, *VSE∞* outperforms previous VSE methods significan
 # Paper
 
 <div>
-	<a href="assets/xxx.pdf">
+	<a href="assets/vse_infty.pdf">
 	<img class="thumbnail" src="assets/img/thumbnail.png"> 
 	</a>
 </div>>
