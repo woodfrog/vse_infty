@@ -206,8 +206,8 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False, save_path=Non
     vocab = tokenizer.vocab
     opt.vocab_size = len(vocab)
 
-    opt.data_path = 'data/coco'
-    opt.backbone_path = 'data/weights/original_updown_backbone.pth'
+    opt.data_path = '/tmp/data/coco'
+    opt.backbone_path = '/tmp/data/weights/original_updown_backbone.pth'
     if data_path is not None:
         opt.data_path = data_path
 

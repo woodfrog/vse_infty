@@ -1,6 +1,6 @@
 DATASET_NAME='coco'
-DATA_PATH='data/'${DATASET_NAME}
-WEIGHT_PATH='data/weights'
+DATA_PATH='/tmp/data/'${DATASET_NAME}
+WEIGHT_PATH='/tmp/data/weights'
 
 # CUDA_VISIBLE_DEVICES=0,1,2,3 python3 train.py \
 CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python3 train.py \

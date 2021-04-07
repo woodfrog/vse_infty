@@ -21,8 +21,6 @@ def get_argument_parser():
                         help='Dimensionality of the joint embedding.')
     parser.add_argument('--grad_clip', default=2., type=float,
                         help='Gradient clipping threshold.')
-    parser.add_argument('--num_layers', default=1, type=int,
-                        help='Number of GRU layers.')
     parser.add_argument('--learning_rate', default=.0002, type=float,
                         help='Initial learning rate.')
     parser.add_argument('--lr_update', default=15, type=int,
@@ -49,22 +47,8 @@ def get_argument_parser():
                         help='Do not normalize the image embeddings.')
     parser.add_argument('--no_txtnorm', action='store_true',
                         help='Do not normalize the text embeddings.')
-    parser.add_argument('--raw_feature_norm', default="clipped_l2norm",
-                        help='clipped_l2norm|l2norm|clipped_l1norm|l1norm|no_norm|softmax')
-    parser.add_argument('--agg_func', default="LogSumExp",
-                        help='LogSumExp|Mean|Max|Sum')
-    parser.add_argument('--cross_attn', default="t2i",
-                        help='t2i|i2t')
     parser.add_argument('--precomp_enc_type', default="basic",
                         help='basic|backbone')
-    parser.add_argument('--bi_gru', action='store_true',
-                        help='Use bidirectional GRU.')
-    parser.add_argument('--lambda_lse', default=6., type=float,
-                        help='LogSumExp temp.')
-    parser.add_argument('--lambda_softmax', default=9., type=float,
-                        help='Attention softmax temperature.')
-    parser.add_argument('--img_pool', type=str, default='mean',
-                        help='The way to pool the image features')
     parser.add_argument('--backbone_path', type=str, default='',
                         help='path to the pre-trained backbone net')
     parser.add_argument('--backbone_source', type=str, default='detector',
@@ -82,9 +66,7 @@ def get_argument_parser():
                              'the embedding layers')
     parser.add_argument('--input_scale_factor', type=float, default=1,
                         help='The factor for scaling the input image')
-    parser.add_argument('--drop', action='store_true',
+    parser.add_argument('--drop', type=bool, default=True,
                         help='Whether using drop words')
-    parser.add_argument('--text_pool', type=str, default='gpool',
-                        help='The way to pool the text features')
 
     return parser

@@ -51,21 +51,19 @@ class RawImageDataset(data.Dataset):
 
         # Set related parameters according to the pre-trained backbone **
         assert 'backbone' in opt.precomp_enc_type
+
         self.backbone_source = opt.backbone_source
-        if 'vsepp' in self.backbone_source or 'small' in self.backbone_source:
-            self.base_target_size = 256
-            self.crop_ratio = 0.875
-            self.train_scale_rate = 1
-            if hasattr(opt, 'input_scale_factor') and opt.input_scale_factor != 1:
-                self.base_target_size = int(self.base_target_size * opt.input_scale_factor)
-                logger.info('Input images are scaled by factor {}'.format(opt.input_scale_factor))
-            if 'detector' in self.backbone_source:
-                self.pixel_means = np.array([[[102.9801, 115.9465, 122.7717]]])
-            else:
-                self.imagenet_mean = [0.485, 0.456, 0.406]
-                self.imagenet_std = [0.229, 0.224, 0.225]
+        self.base_target_size = 256
+        self.crop_ratio = 0.875
+        self.train_scale_rate = 1
+        if hasattr(opt, 'input_scale_factor') and opt.input_scale_factor != 1:
+            self.base_target_size = int(self.base_target_size * opt.input_scale_factor)
+            logger.info('Input images are scaled by factor {}'.format(opt.input_scale_factor))
+        if 'detector' in self.backbone_source:
+            self.pixel_means = np.array([[[102.9801, 115.9465, 122.7717]]])
         else:
-            raise ValueError('Invalid backbone type {}'.format(self.backbone_source))
+            self.imagenet_mean = [0.485, 0.456, 0.406]
+            self.imagenet_std = [0.229, 0.224, 0.225]
 
         self.length = len(self.captions)
 
