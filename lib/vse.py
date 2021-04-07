@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 class VSEModel(object):
     """
-    Stacked Cross Attention Network (SCAN) model
+        The standard VSE model
     """
 
     def __init__(self, opt):

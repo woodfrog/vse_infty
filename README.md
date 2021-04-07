@@ -22,11 +22,11 @@ We referred to the implementations of [VSE++](https://github.com/fartashf/vsepp)
 
 We trained and evaluated our models with the following key dependencies:
 
-	- Python 3.7.3 
+- Python 3.7.3 
 
-	- Pytorch 1.2.0
+- Pytorch 1.2.0
 
-	- Transformers 2.1.0
+- Transformers 2.1.0
 
 
 Run ```pip install -r requirements.txt ``` to install the exactly same dependencies as our experiments. However, we also verified that using the latest Pytorch 1.8.0 and Transformers 4.4.2 can also produce similar results.  
@@ -35,6 +35,7 @@ Run ```pip install -r requirements.txt ``` to install the exactly same dependenc
 
 We organize all data used in the experiments in the following manner:
 
+```
 data
 ├── coco
 │   ├── precomp  # pre-computed region features for COCO, provided by SCAN
@@ -63,15 +64,15 @@ data
 │      └── original_updown_backbone.pth # the BUTD CNN weights
 │
 └── vocab  # vocab files provided by SCAN (only used when the text backbone is BiGRU)
-
+```
 
 ## Training
 
 We provide example training scripts for:
 
-	1. Grid feature with BUTD CNN for the image feature, BERT-base for the text feature. See ```train_grid.sh```
+1. Grid feature with BUTD CNN for the image feature, BERT-base for the text feature. See ```train_grid.sh```
 
-	2. BUTD Region feature for the image feature, BERT-base for the text feature. See ```train_region.sh```
+2. BUTD Region feature for the image feature, BERT-base for the text feature. See ```train_region.sh```
 
 To use other CNN initializations for the grid image feature, change the ```--backbone_source``` argument to different values: (1). the default ```detector``` is to use the [BUTD ResNet-101](https://github.com/peteanderson80/bottom-up-attention), we have adapted the original Caffe weights into Pytorch and provided the download link above; (2). ```wsl```  is to use the backbones from [large-scale weakly supervised learning](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/); (3). ```imagenet_res152``` is to use the ResNet-152 pre-trained on ImageNet. 
 

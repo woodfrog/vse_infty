@@ -1,5 +1,4 @@
 """Training script"""
-import _init_paths
 import os
 import time
 import numpy as np
