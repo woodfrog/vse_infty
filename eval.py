@@ -9,7 +9,6 @@ logger.setLevel(logging.INFO)
 def main():
 
     split = 'testall'
-    # bases = ['runs/coco_entity_bert_var_gpool_local/', ]
     bases = [
         'data/weights/runs/coco_vsepp_updown_bert_var_gpool/',
         # 'data/weights/runs/coco_vsepp_wsl_bert_var_gpool/',
@@ -18,8 +17,6 @@ def main():
     ]
     for base in bases:
         logger.info('Evaluating {}...'.format(base))
-        #logging_path = os.path.join(base, 'test_log_release.txt')
-        #logging.basicConfig(filename=logging_path, filemode='w', format='%(asctime)s %(message)s', level=logging.INFO)
         model_path = os.path.join(base, 'model_best.pth.tar')
         #save_path = os.path.join(base, 'results_{}_5k.npy'.format(split))
         save_path = None

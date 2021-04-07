@@ -86,10 +86,7 @@ class RawImageDataset(data.Dataset):
         caption_tokens = self.tokenizer.basic_tokenizer.tokenize(caption)
 
         # Convert caption (string) to word ids.
-        if hasattr(self.opt, 'drop') and self.opt.drop:
-            target = process_caption(self.tokenizer, caption_tokens, self.train)
-        else:
-            target = process_caption(self.tokenizer, caption_tokens, False)
+        target = process_caption(self.tokenizer, caption_tokens, self.train)
 
         image_id = self.images[img_index]
         image_path = os.path.join(self.image_base, self.id_to_path[str(image_id)])
@@ -228,10 +225,7 @@ class PrecompRegionDataset(data.Dataset):
         caption_tokens = self.tokenizer.basic_tokenizer.tokenize(caption)
 
         # Convert caption (string) to word ids.
-        if hasattr(self.opt, 'drop') and self.opt.drop:
-            target = process_caption(self.tokenizer, caption_tokens, self.train)
-        else:
-            target = process_caption(self.tokenizer, caption_tokens, False)
+        target = process_caption(self.tokenizer, caption_tokens, self.train)
         image = self.images[img_index]
         if self.train:
             num_features = image.shape[0]

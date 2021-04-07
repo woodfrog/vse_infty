@@ -195,17 +195,17 @@ class ResnetFeatureExtractor(nn.Module):
         self.pooling_size = pooling_size
         self.fixed_blocks = fixed_blocks
 
-        if self.backbone_source == 'detector' or self.backbone_source == 'vsepp_detector':
+        if 'detector' in self.backbone_source:
             self.resnet = resnet101()
-        elif self.backbone_source == 'imagenet' or self.backbone_source == 'vsepp_imagenet':
+        elif self.backbone_source == 'imagenet':
             self.resnet = resnet101(pretrained=True)
-        elif self.backbone_source == 'imagenet_res50' or self.backbone_source == 'vsepp_imagenet_res50':
+        elif self.backbone_source == 'imagenet_res50':
             self.resnet = resnet50(pretrained=True)
-        elif self.backbone_source == 'imagenet_res152' or self.backbone_source == 'vsepp_imagenet_res152':
+        elif self.backbone_source == 'imagenet_res152':
             self.resnet = resnet152(pretrained=True)
-        elif self.backbone_source == 'imagenet_resnext' or self.backbone_source == 'vsepp_resnext':
+        elif self.backbone_source == 'imagenet_resnext':
             self.resnet = torch.hub.load('pytorch/vision:v0.4.2', 'resnext101_32x8d', pretrained=True)
-        elif self.backbone_source == 'wsl' or self.backbone_source == 'vsepp_wsl':
+        elif 'wsl' in self.backbone_source:
             self.resnet = torch.hub.load('facebookresearch/WSL-Images', 'resnext101_32x8d_wsl')
         else:
             raise ValueError('Unknown backbone source {}'.format(self.backbone_source))
@@ -220,7 +220,7 @@ class ResnetFeatureExtractor(nn.Module):
 
         if self.weights_path != '':
             if 'detector' in self.backbone_source:
-                if os.path.exists(self.weights_path) or self.weights_path.startswith('hdfs://'):
+                if os.path.exists(self.weights_path):
                     logger.info(
                         'Loading pretrained backbone weights from {} for backbone source {}'.format(self.weights_path,
                                                                                                     self.backbone_source))
