@@ -28,7 +28,7 @@ Pooling Operator (GPO). It is simple and effective, which automatically adapts t
 modality and feature extractor, and improves VSE models at negligible extra computation cost.
 
 
-### Iamge-text Matching Results
+### Image-text Matching Results
 
 The following tables show partial results of image-to-text retrieval on COCO and Flickr30K datasets. In these experiments, we use BUTD region features for baseline and our methods, with BERT as the text encoder.
 
