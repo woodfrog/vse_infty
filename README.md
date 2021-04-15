@@ -1,6 +1,6 @@
 # Learning the Best Pooling Strategy for Visual Semantic Embedding
 
-This is the official PyTorch implementation of the paper [Learning the Best Pooling Strategy for Visual Semantic Embedding](https://arxiv.org/abs/2011.04305) (CVPR 2021).
+This is the official PyTorch implementation of the paper [Learning the Best Pooling Strategy for Visual Semantic Embedding](https://arxiv.org/abs/2011.04305) (CVPR 2021 Oral).
 
 ```
 @InProceedings{chen2021vseinfty,
@@ -74,7 +74,11 @@ We provide example training scripts for:
 
 2. BUTD Region feature for the image feature, BERT-base for the text feature. See ```train_region.sh```
 
-To use other CNN initializations for the grid image feature, change the ```--backbone_source``` argument to different values: (1). the default ```detector``` is to use the [BUTD ResNet-101](https://github.com/peteanderson80/bottom-up-attention), we have adapted the original Caffe weights into Pytorch and provided the download link above; (2). ```wsl```  is to use the backbones from [large-scale weakly supervised learning](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/); (3). ```imagenet_res152``` is to use the ResNet-152 pre-trained on ImageNet. 
+To use other CNN initializations for the grid image feature, change the ```--backbone_source``` argument to different values: 
+
+- (1). the default ```detector``` is to use the [BUTD ResNet-101](https://github.com/peteanderson80/bottom-up-attention), we have adapted the original Caffe weights into Pytorch and provided the download link above; 
+- (2). ```wsl```  is to use the backbones from [large-scale weakly supervised learning](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/); 
+- (3). ```imagenet_res152``` is to use the ResNet-152 pre-trained on ImageNet. 
 
 
 
