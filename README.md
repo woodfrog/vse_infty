@@ -23,7 +23,7 @@ We referred to the implementations of [VSE++](https://github.com/fartashf/vsepp)
 
 <img src="docs/assets/img/overview.png" width="100%">
 
-**Figure 1.** Illustration of the standard Visual Semantic Embedding framework with the proposed pooling-based aggregator, i.e., Generalized
+Illustration of the standard Visual Semantic Embedding (VSE) framework with the proposed pooling-based aggregator, i.e., Generalized
 Pooling Operator (GPO). It is simple and effective, which automatically adapts to the appropriate pooling strategy given different data
 modality and feature extractor, and improves VSE models at negligible extra computation cost.
 
