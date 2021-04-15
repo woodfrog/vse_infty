@@ -2,6 +2,8 @@
 
 Official PyTorch implementation of the paper [Learning the Best Pooling Strategy for Visual Semantic Embedding](https://arxiv.org/abs/2011.04305) (**CVPR 2021 Oral**).
 
+Please use the following bib entry to cite this paper if you are using any resources from the repo.
+
 ```
 @InProceedings{chen2021vseinfty,
      title={Learning the Best Pooling Strategy for Visual Semantic Embedding},
