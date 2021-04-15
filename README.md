@@ -1,6 +1,6 @@
 # Learning the Best Pooling Strategy for Visual Semantic Embedding
 
-<img src="teaser/pytorch-logo-dark.png" width="10%"> [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
+<img src="docs/assets/img/pytorch-logo-dark.png" width="10%"> [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
 
 Official PyTorch implementation of the paper [Learning the Best Pooling Strategy for Visual Semantic Embedding](https://arxiv.org/abs/2011.04305) (**CVPR 2021 Oral**).
 
@@ -23,19 +23,28 @@ We referred to the implementations of [VSE++](https://github.com/fartashf/vsepp)
 
 <img src="docs/assets/img/overview.png" width="100%">
 
-Figure 1. Illustration of the standard Visual Semantic Embedding framework with the proposed pooling-based aggregator, i.e., Generalized
+**Figure 1.** Illustration of the standard Visual Semantic Embedding framework with the proposed pooling-based aggregator, i.e., Generalized
 Pooling Operator (GPO). It is simple and effective, which automatically adapts to the appropriate pooling strategy given different data
 modality and feature extractor, and improves VSE models at negligible extra computation cost.
 
 
 ### Iamge-text Matching Results
 
-| | <td colspan="2">Img2Txt</td> <td colspan="2">Txt2Img</td>  |
-| Model               | R1 | R5 | R1 | R5 |
-|:-------------------:|:--------:|:--------:|:--------:|:--------:|
-| VSE++               |   67.9 	 | 	 91.9 	|   54.0   |   85.6   |
-| VSEInfty            | **79.7** | **96.4** | **64.8** | **91.4** |
+The following tables show partial results of image-to-text retrieval on COCO and Flickr30K datasets. In these experiments, we use BUTD region features for baseline and our methods, with BERT as the text encoder.
 
+#### Results of 5-fold evaluation on COCO 1K Test Split
+
+| |R1|R5|R1|R5|Link|
+|---|---|---|---|---|---|
+|VSE++		|67.9|91.9|54.0|85.6|[Here]()|
+|VSEInfty	|**79.7**|**96.4**|**64.8**|**91.4**|[Here]()|
+
+#### Results on Flickr30K Test Split
+
+| |R1|R5|R1|R5|Link|
+|---|---|---|---|---|---|
+|VSE++		|63.4|87.2|45.6|76.4|[Here]()|
+|VSEInfty	|**81.7**|**95.4**|**61.4**|**85.9**|[Here]()|
 
 ## Preparation
 
