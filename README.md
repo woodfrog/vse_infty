@@ -36,18 +36,18 @@ The following tables show partial results of image-to-text retrieval on COCO and
 
 | |R1|R5|R1|R5|Link|
 |---|---|---|---|---|---|
-|VSE++		|67.9|91.9|54.0|85.6|[Here]()|
-|VSEInfty	|**79.7**|**96.4**|**64.8**|**91.4**|[Here]()|
+|Ours: VSE++	|67.9|91.9|54.0|85.6|[Here]()|
+|Ours: VSEInfty	|**79.7**|**96.4**|**64.8**|**91.4**|[Here]()|
 
 #### Results on Flickr30K Test Split
 
 | |R1|R5|R1|R5|Link|
 |---|---|---|---|---|---|
-|VSE++		|63.4|87.2|45.6|76.4|[Here]()|
-|VSEInfty	|**81.7**|**95.4**|**61.4**|**85.9**|[Here]()|
+|Ours: VSE++ 	|63.4|87.2|45.6|76.4|[Here]()|
+|Ours: VSEInfty	|**81.7**|**95.4**|**61.4**|**85.9**|[Here]()|
+
 
 ## Preparation
-
 
 ### Environment
 
@@ -69,7 +69,7 @@ We organize all data used in the experiments in the following manner:
 ```
 data
 ├── coco
-│   ├── precomp  # pre-computed region features for COCO, provided by SCAN
+│   ├── precomp  # pre-computed BUTD region features for COCO, provided by SCAN
 │   │      ├── train_ids.txt
 │   │      ├── train_caps.txt
 │   │      ├── ......
@@ -81,7 +81,7 @@ data
 │   
 │
 ├── f30k
-│   ├── precomp  # pre-computed region features for Flickr30K, provided by SCAN
+│   ├── precomp  # pre-computed BUTD region features for Flickr30K, provided by SCAN
 │   │      ├── train_ids.txt
 │   │      ├── train_caps.txt
 │   │      ├── ......
@@ -96,6 +96,12 @@ data
 │
 └── vocab  # vocab files provided by SCAN (only used when the text backbone is BiGRU)
 ```
+
+The download links for original COCO/F30K images, precomputed BUTD features, and corresponding vocabularies are from the offical repo of [SCAN](https://github.com/kuanghuei/SCAN#download-data). The ```precomp``` folders contain pre-computed BUTD region features, ```data/coco/images``` contains raw MS-COCO images, and ```data/f30k/flickr30k-images``` contains raw Flickr30K images. 
+
+The ```id_mapping.json``` files are the mapping from image index (ie, the COCO id for COCO images) to corresponding filenames, we generated these mappings to eliminate the need of the ```pycocotools``` package. 
+
+```weights/original_updowmn_backbone.pth``` is the pre-trained ResNet-101 weights from [Bottom-up Attention Model](https://github.com/peteanderson80/bottom-up-attention), we converted the original Caffe weights into Pytorch.
 
 ## Training
 
