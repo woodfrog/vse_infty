@@ -7,12 +7,12 @@ Official PyTorch implementation of the paper [Learning the Best Pooling Strategy
 Please use the following bib entry to cite this paper if you are using any resources from the repo.
 
 ```
-@InProceedings{chen2021vseinfty,
+@inproceedings{chen2021vseinfty,
      title={Learning the Best Pooling Strategy for Visual Semantic Embedding},
-     author={Jiacheng Chen, Hexiang Hu, Hao Wu, Yuning Jiang, Changhu Wang},
+     author={Chen, Jiacheng and Hu, Hexiang and Wu, Hao and Jiang, Yuning and Wang Changhu},
      booktitle={IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
      year={2021}
-} 
+}
 ```
 
 
