@@ -66,7 +66,5 @@ def get_argument_parser():
                              'the embedding layers')
     parser.add_argument('--input_scale_factor', type=float, default=1,
                         help='The factor for scaling the input image')
-    parser.add_argument('--drop', type=bool, default=True,
-                        help='Whether using drop words')
 
     return parser

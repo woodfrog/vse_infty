@@ -228,9 +228,9 @@ class ResnetFeatureExtractor(nn.Module):
                     self.base.load_state_dict(backbone_ckpt['base'])
                     self.top.load_state_dict(backbone_ckpt['top'])
                 else:
-                    raise ValueError('Could not find weights for backbone net at {}'.format(self.weights_path))
+                    raise ValueError('Could not find weights for backbone CNN at {}'.format(self.weights_path))
             else:
-                logger.info('Did not load external(non-ImageNet) checkpoints')
+                logger.info('Did not load external checkpoints')
         self.unfreeze_base()
 
     def set_fixed_blocks(self, fixed_blocks):
