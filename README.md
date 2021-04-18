@@ -47,7 +47,7 @@ The following tables show partial results of image-to-text retrieval on COCO and
 | |R1|R5|R1|R5|Link|
 |---|---|---|---|---|---|
 |SCAN	|67.4|90.3|48.6|77.7| - |
-|VSRN (ensemble)	|71.3|90.6|54.7|81.8| - |
+|VSRN ensemble	|71.3|90.6|54.7|81.8| - |
 |VSEInfty w/ BUTD region |**76.5**|**94.2**|**56.4**|**83.4**|[Here]()|
 |VSEInfty w/ BUTD grid |**77.9**|**93.7**|**57.5**|**83.4**|[Here]()| 
 |VSEInfty w/ BUTD region + grid ensemble|**80.7**|**96.4**|**60.8**|**86.3**| - |
