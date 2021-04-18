@@ -11,8 +11,9 @@ def main():
         #'runs/release_weights/coco_butd_region_bert',
         #'runs/release_weights/coco_butd_grid_bert',
         #'runs/release_weights/coco_wsl_grid_bert',
-        'runs/release_weights/f30k_butd_region_bert',
-        'runs/release_weights/f30k_butd_grid_bert',
+        #'runs/release_weights/f30k_butd_region_bert',
+        #'runs/release_weights/f30k_butd_grid_bert',
+        'runs/release_weights/f30k_wsl_grid_bert',
     ]
     for base in weights_bases:
         logger.info('Evaluating {}...'.format(base))
