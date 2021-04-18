@@ -7,12 +7,12 @@ Official PyTorch implementation of the paper [Learning the Best Pooling Strategy
 Please use the following bib entry to cite this paper if you are using any resources from the repo.
 
 ```
-@inproceedings{chen2021vseinfty,
+@InProceedings{chen2021vseinfty,
      title={Learning the Best Pooling Strategy for Visual Semantic Embedding},
-     author={Chen, Jiacheng and Hu, Hexiang and Wu, Hao and Jiang, Yuning and Wang Changhu},
+     author={Jiacheng Chen, Hexiang Hu, Hao Wu, Yuning Jiang, Changhu Wang},
      booktitle={IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
      year={2021}
-}
+} 
 ```
 
 
@@ -30,7 +30,7 @@ modality and feature extractor, and improves VSE models at negligible extra comp
 
 ### Image-text Matching Results
 
-The following tables show partial results of image-to-text retrieval on COCO and Flickr30K datasets. In these experiments, we use BUTD region features for baseline and our methods, with BERT as the text encoder.
+The following tables show partial results of image-to-text retrieval on COCO and Flickr30K datasets. In these experiments, we use BERT-base as the text encoder for our methods. This branch provides the code and pre-trained models for using BERT as the text backbone, please check out to the ```bigru``` branch for the code and pre-trained models for using BiGRU as the text backbone.
 
 #### Results of 5-fold evaluation on COCO 1K Test Split
 
