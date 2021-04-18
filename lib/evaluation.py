@@ -2,14 +2,15 @@
 from __future__ import print_function
 import logging
 import time
+import os
 import torch
 import numpy as np
 
 from collections import OrderedDict
-from transformers import BertTokenizer
 
 from lib.datasets import image_caption
 from lib.vse import VSEModel
+from lib.vocab import Vocabulary, deserialize_vocab
 
 logger = logging.getLogger(__name__)
 
@@ -202,8 +203,15 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False, save_path=Non
         opt.caption_loss = False
 
     # load vocabulary used by the model
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-    vocab = tokenizer.vocab
+    opt.vocab_path = '/tmp/data/vocab'
+
+    # load vocabulary used by the model
+    if 'coco' in opt.data_name:
+        vocab_file = 'coco_precomp_vocab.json'
+    else:
+        vocab_file = 'f30k_precomp_vocab.json'
+    vocab = deserialize_vocab(os.path.join(opt.vocab_path, vocab_file))
+    vocab.add_word('<mask>')
     opt.vocab_size = len(vocab)
 
     opt.data_path = '/tmp/data/coco'
@@ -214,13 +222,15 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False, save_path=Non
     # construct model
     model = VSEModel(opt)
 
-    model.make_data_parallel()
+    if opt.precomp_enc_type == 'backbone':
+        model.make_data_parallel()
+
     # load model state
     model.load_state_dict(checkpoint['model'])
     model.val_start()
 
     logger.info('Loading dataset')
-    data_loader = image_caption.get_test_loader(split, opt.data_name, tokenizer,
+    data_loader = image_caption.get_test_loader(split, opt.data_name, vocab,
                                                 opt.batch_size, opt.workers, opt)
 
     logger.info('Computing results...')

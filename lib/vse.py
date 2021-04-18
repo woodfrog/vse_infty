@@ -22,12 +22,13 @@ class VSEModel(object):
     def __init__(self, opt):
         # Build Models
         self.grad_clip = opt.grad_clip
-        self.img_enc = get_image_encoder(opt.data_name, opt.img_dim, opt.embed_size,
+        self.img_enc = get_image_encoder(opt.img_dim, opt.embed_size,
                                          precomp_enc_type=opt.precomp_enc_type,
                                          backbone_source=opt.backbone_source,
                                          backbone_path=opt.backbone_path,
                                          no_imgnorm=opt.no_imgnorm)
-        self.txt_enc = get_text_encoder(opt.embed_size, no_txtnorm=opt.no_txtnorm)
+        self.txt_enc = get_text_encoder(opt.vocab_size, opt.embed_size, opt.word_dim, opt.num_layers,
+                                        use_bi_gru=True, no_txtnorm=opt.no_txtnorm)
         if torch.cuda.is_available():
             self.img_enc.cuda()
             self.txt_enc.cuda()
@@ -45,51 +46,22 @@ class VSEModel(object):
         self.opt = opt
 
         # Set up the lr for different parts of the VSE model
-        decay_factor = 1e-4
         if opt.precomp_enc_type == 'basic':
             if self.opt.optim == 'adam':
-                all_text_params = list(self.txt_enc.parameters())
-                bert_params = list(self.txt_enc.bert.parameters())
-                bert_params_ptr = [p.data_ptr() for p in bert_params]
-                text_params_no_bert = list()
-                for p in all_text_params:
-                    if p.data_ptr() not in bert_params_ptr:
-                        text_params_no_bert.append(p)
-                self.optimizer = torch.optim.AdamW([
-                    {'params': text_params_no_bert, 'lr': opt.learning_rate},
-                    {'params': bert_params, 'lr': opt.learning_rate * 0.1},
-                    {'params': self.img_enc.parameters(), 'lr': opt.learning_rate},
-                ],
-                    lr=opt.learning_rate, weight_decay=decay_factor)
-            elif self.opt.optim == 'sgd':
-                self.optimizer = torch.optim.SGD(self.params, lr=opt.learning_rate, momentum=0.9)
+                self.optimizer = torch.optim.AdamW(self.params, lr=opt.learning_rate)
             else:
                 raise ValueError('Invalid optim option {}'.format(self.opt.optim))
         else:
+            decay_factor = 1e-4
             if self.opt.optim == 'adam':
-                all_text_params = list(self.txt_enc.parameters())
-                bert_params = list(self.txt_enc.bert.parameters())
-                bert_params_ptr = [p.data_ptr() for p in bert_params]
-                text_params_no_bert = list()
-                for p in all_text_params:
-                    if p.data_ptr() not in bert_params_ptr:
-                        text_params_no_bert.append(p)
                 self.optimizer = torch.optim.AdamW([
-                    {'params': text_params_no_bert, 'lr': opt.learning_rate},
-                    {'params': bert_params, 'lr': opt.learning_rate * 0.1},
+                    {'params': self.txt_enc.parameters(), 'lr': opt.learning_rate},
                     {'params': self.img_enc.backbone.top.parameters(),
                      'lr': opt.learning_rate * opt.backbone_lr_factor, },
                     {'params': self.img_enc.backbone.base.parameters(),
                      'lr': opt.learning_rate * opt.backbone_lr_factor, },
                     {'params': self.img_enc.image_encoder.parameters(), 'lr': opt.learning_rate},
                 ], lr=opt.learning_rate, weight_decay=decay_factor)
-            elif self.opt.optim == 'sgd':
-                self.optimizer = torch.optim.SGD([
-                    {'params': self.txt_enc.parameters(), 'lr': opt.learning_rate},
-                    {'params': self.img_enc.backbone.parameters(), 'lr': opt.learning_rate * opt.backbone_lr_factor,
-                     'weight_decay': decay_factor},
-                    {'params': self.img_enc.image_encoder.parameters(), 'lr': opt.learning_rate},
-                ], lr=opt.learning_rate, momentum=0.9, nesterov=True)
             else:
                 raise ValueError('Invalid optim option {}'.format(self.opt.optim))
 

@@ -8,6 +8,7 @@ from imageio import imread
 import random
 import json
 import cv2
+import nltk
 
 import logging
 
@@ -20,12 +21,12 @@ class RawImageDataset(data.Dataset):
     Possible options: f30k_precomp, coco_precomp
     """
 
-    def __init__(self, data_path, data_name, data_split, tokenzier, opt, train):
+    def __init__(self, data_path, data_name, data_split, vocab, opt, train):
         self.opt = opt
         self.train = train
         self.data_path = data_path
         self.data_name = data_name
-        self.tokenizer = tokenzier
+        self.vocab = vocab
 
         loc_cap = osp.join(data_path, 'precomp')
         loc_image = osp.join(data_path, 'precomp')
@@ -81,10 +82,9 @@ class RawImageDataset(data.Dataset):
     def __getitem__(self, index):
         img_index = index // self.im_div
         caption = self.captions[index]
-        caption_tokens = self.tokenizer.basic_tokenizer.tokenize(caption)
 
         # Convert caption (string) to word ids.
-        target = process_caption(self.tokenizer, caption_tokens, self.train)
+        target = process_caption(self.vocab, caption, self.train)
 
         image_id = self.images[img_index]
         image_path = os.path.join(self.image_base, self.id_to_path[str(image_id)])
@@ -186,8 +186,8 @@ class PrecompRegionDataset(data.Dataset):
     Load precomputed captions and image features for COCO or Flickr
     """
 
-    def __init__(self, data_path, data_name, data_split, tokenizer, opt, train):
-        self.tokenizer = tokenizer
+    def __init__(self, data_path, data_name, data_split, vocab, opt, train):
+        self.vocab = vocab
         self.opt = opt
         self.train = train
         self.data_path = data_path
@@ -220,10 +220,9 @@ class PrecompRegionDataset(data.Dataset):
         # handle the image redundancy
         img_index = index // self.im_div
         caption = self.captions[index]
-        caption_tokens = self.tokenizer.basic_tokenizer.tokenize(caption)
 
         # Convert caption (string) to word ids.
-        target = process_caption(self.tokenizer, caption_tokens, self.train)
+        target = process_caption(self.vocab, caption, self.train)
         image = self.images[img_index]
         if self.train:
             num_features = image.shape[0]
@@ -236,42 +235,41 @@ class PrecompRegionDataset(data.Dataset):
         return self.length
 
 
-def process_caption(tokenizer, tokens, train=True):
-    output_tokens = []
-    deleted_idx = []
-
-    for i, token in enumerate(tokens):
-        sub_tokens = tokenizer.wordpiece_tokenizer.tokenize(token)
-        prob = random.random()
-
-        if prob < 0.20 and train:  # mask/remove the tokens only during training
-            prob /= 0.20
-
-            # 50% randomly change token to mask token
-            if prob < 0.5:
-                for sub_token in sub_tokens:
-                    output_tokens.append("[MASK]")
-            # 10% randomly change token to random token
-            elif prob < 0.6:
-                for sub_token in sub_tokens:
-                    output_tokens.append(random.choice(list(tokenizer.vocab.keys())))
-                    # -> rest 10% randomly keep current token
+def process_caption(vocab, caption, drop=False):
+    if not drop:
+        tokens = nltk.tokenize.word_tokenize(caption.lower())
+        caption = list()
+        caption.append(vocab('<start>'))
+        caption.extend([vocab(token) for token in tokens])
+        caption.append(vocab('<end>'))
+        target = torch.Tensor(caption)
+        return target
+    else:
+        # Convert caption (string) to word ids.
+        tokens = ['<start>', ]
+        tokens.extend(nltk.tokenize.word_tokenize(caption.lower()))
+        tokens.append('<end>')
+        deleted_idx = []
+        for i, token in enumerate(tokens):
+            prob = random.random()
+            if prob < 0.20:
+                prob /= 0.20
+                # 50% randomly change token to mask token
+                if prob < 0.5:
+                    tokens[i] = vocab.word2idx['<mask>']
+                # 10% randomly change token to random token
+                elif prob < 0.6:
+                    tokens[i] = random.randrange(len(vocab))
+                # 40% randomly remove the token
+                else:
+                    tokens[i] = vocab(token)
+                    deleted_idx.append(i)
             else:
-                for sub_token in sub_tokens:
-                    output_tokens.append(sub_token)
-                    deleted_idx.append(len(output_tokens) - 1)
-        else:
-            for sub_token in sub_tokens:
-                # no masking token (will be ignored by loss function later)
-                output_tokens.append(sub_token)
-
-    if len(deleted_idx) != 0:
-        output_tokens = [output_tokens[i] for i in range(len(output_tokens)) if i not in deleted_idx]
-
-    output_tokens = ['[CLS]'] + output_tokens + ['[SEP]']
-    target = tokenizer.convert_tokens_to_ids(output_tokens)
-    target = torch.Tensor(target)
-    return target
+                tokens[i] = vocab(token)
+        if len(deleted_idx) != 0:
+            tokens = [tokens[i] for i in range(len(tokens)) if i not in deleted_idx]
+        target = torch.Tensor(tokens)
+        return target
 
 
 def collate_fn(data):
@@ -286,11 +284,11 @@ def collate_fn(data):
         targets: torch tensor of shape (batch_size, padded_length).
         lengths: list; valid length for each padded caption.
     """
+    # Sort a data list by caption length
+    data.sort(key=lambda x: len(x[1]), reverse=True)
     images, captions, ids, img_ids = zip(*data)
     if len(images[0].shape) == 2:  # region feature
-        # Sort a data list by caption length
-        # Merge images (convert tuple of 3D tensor to 4D tensor)
-        # images = torch.stack(images, 0)
+        # Merge images
         img_lengths = [len(image) for image in images]
         all_images = torch.zeros(len(images), max(img_lengths), images[0].size(-1))
         for i, image in enumerate(images):
@@ -298,7 +296,7 @@ def collate_fn(data):
             all_images[i, :end] = image[:end]
         img_lengths = torch.Tensor(img_lengths)
 
-        # Merget captions (convert tuple of 1D tensor to 2D tensor)
+        # Merget captions
         lengths = [len(cap) for cap in captions]
         targets = torch.zeros(len(captions), max(lengths)).long()
 
@@ -308,10 +306,9 @@ def collate_fn(data):
 
         return all_images, img_lengths, targets, lengths, ids
     else:  # raw input image
-        # Merge images (convert tuple of 3D tensor to 4D tensor)
+        # Merge images
         images = torch.stack(images, 0)
-
-        # Merget captions (convert tuple of 1D tensor to 2D tensor)
+        # Merget captions
         lengths = [len(cap) for cap in captions]
         targets = torch.zeros(len(captions), max(lengths)).long()
         for i, cap in enumerate(captions):
@@ -320,7 +317,7 @@ def collate_fn(data):
         return images, targets, lengths, ids
 
 
-def get_loader(data_path, data_name, data_split, tokenizer, opt, batch_size=100,
+def get_loader(data_path, data_name, data_split, vocab, opt, batch_size=100,
                shuffle=True, num_workers=2, train=True):
     """Returns torch.utils.data.DataLoader for custom coco dataset."""
     if train:
@@ -328,7 +325,7 @@ def get_loader(data_path, data_name, data_split, tokenizer, opt, batch_size=100,
     else:
         drop_last = False
     if opt.precomp_enc_type == 'basic':
-        dset = PrecompRegionDataset(data_path, data_name, data_split, tokenizer, opt, train)
+        dset = PrecompRegionDataset(data_path, data_name, data_split, vocab, opt, train)
         data_loader = torch.utils.data.DataLoader(dataset=dset,
                                                   batch_size=batch_size,
                                                   shuffle=shuffle,
@@ -337,7 +334,7 @@ def get_loader(data_path, data_name, data_split, tokenizer, opt, batch_size=100,
                                                   num_workers=num_workers,
                                                   drop_last=drop_last)
     else:
-        dset = RawImageDataset(data_path, data_name, data_split, tokenizer, opt, train)
+        dset = RawImageDataset(data_path, data_name, data_split, vocab, opt, train)
         data_loader = torch.utils.data.DataLoader(dataset=dset,
                                                   batch_size=batch_size,
                                                   shuffle=shuffle,
@@ -347,21 +344,21 @@ def get_loader(data_path, data_name, data_split, tokenizer, opt, batch_size=100,
     return data_loader
 
 
-def get_loaders(data_path, data_name, tokenizer, batch_size, workers, opt):
-    train_loader = get_loader(data_path, data_name, 'train', tokenizer, opt,
+def get_loaders(data_path, data_name, vocab, batch_size, workers, opt):
+    train_loader = get_loader(data_path, data_name, 'train', vocab, opt,
                               batch_size, True, workers)
-    val_loader = get_loader(data_path, data_name, 'dev', tokenizer, opt,
+    val_loader = get_loader(data_path, data_name, 'dev', vocab, opt,
                             batch_size, False, workers, train=False)
     return train_loader, val_loader
 
 
-def get_train_loader(data_path, data_name, tokenizer, batch_size, workers, opt, shuffle):
-    train_loader = get_loader(data_path, data_name, 'train', tokenizer, opt,
+def get_train_loader(data_path, data_name, vocab, batch_size, workers, opt, shuffle):
+    train_loader = get_loader(data_path, data_name, 'train', vocab, opt,
                               batch_size, shuffle, workers)
     return train_loader
 
 
-def get_test_loader(split_name, data_name, tokenizer, batch_size, workers, opt):
-    test_loader = get_loader(opt.data_path, data_name, split_name, tokenizer, opt,
+def get_test_loader(split_name, data_name, vocab, batch_size, workers, opt):
+    test_loader = get_loader(opt.data_path, data_name, split_name, vocab, opt,
                              batch_size, False, workers, train=False)
     return test_loader

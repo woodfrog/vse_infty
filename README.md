@@ -30,17 +30,17 @@ modality and feature extractor, and improves VSE models at negligible extra comp
 
 ### Image-text Matching Results
 
-The following tables show partial results of image-to-text retrieval on COCO and Flickr30K datasets. In these experiments, we use BERT-base as the text encoder for our methods. This branch provides the code and pre-trained models for using BERT as the text backbone, please check out to the ```bigru``` branch for the code and pre-trained models for using BiGRU as the text backbone.
+The following tables show partial results of image-to-text retrieval on COCO and Flickr30K datasets. In these experiments, we use BERT-base as the text encoder for our methods. This branch provides the code and pre-trained models for using **BiGRU as the text backbone**, please check out to the **```master``` branch** for the code and pre-trained models for using BERT as the text backbone.
 
 #### Results of 5-fold evaluation on COCO 1K Test Split
 
 | |R1|R5|R1|R5|Link|
 |---|---|---|---|---|---|
 |SCAN	|72.7|94.8|58.8|88.4| - |
-|VSRN (ensemble)	|76.2|94.8|62.8|89.7| - |
-|VSEInfty w/ BUTD region |**79.7**|**96.4**|**64.8**|**91.4**|[Here]()|
-|VSEInfty w/ BUTD grid |**80.4**|**96.8**|**66.4**|**92.1**|[Here]()|
-|VSEInfty w/ WSL grid |**84.5**|**98.1**|**72.0**|**93.9**|[Here]()|
+|VSRN ensemble	|76.2|94.8|62.8|89.7| - |
+|VSEInfty w/ BUTD region |**78.5**|**96.0**|**61.7**|**90.3**|[Here]()|
+|VSEInfty w/ BUTD grid |**78.0**|**95.8**|**62.6**|**90.6**|[Here]()|
+|VSEInfty w/ BUTD region + grid ensemble|**80.0**|**97.0**|**64.8**|**91.6**| - |
 
 #### Results on Flickr30K Test Split
 
@@ -48,9 +48,9 @@ The following tables show partial results of image-to-text retrieval on COCO and
 |---|---|---|---|---|---|
 |SCAN	|67.4|90.3|48.6|77.7| - |
 |VSRN (ensemble)	|71.3|90.6|54.7|81.8| - |
-|VSEInfty w/ BUTD region |**81.7**|**95.4**|**61.4**|**85.9**|[Here]()|
-|VSEInfty w/ BUTD grid |**81.5**|**97.1**|**63.7**|**88.3**|[Here]()| 
-|VSEInfty w/ WSL grid |**88.4**|**98.3**|**74.2**|**93.7**|[Here]()|
+|VSEInfty w/ BUTD region |**76.5**|**94.2**|**56.4**|**83.4**|[Here]()|
+|VSEInfty w/ BUTD grid |**77.9**|**93.7**|**57.5**|**83.4**|[Here]()| 
+|VSEInfty w/ BUTD region + grid ensemble|**80.7**|**96.4**|**60.8**|**86.3**| - |
 
 
 ## Preparation
@@ -63,10 +63,10 @@ We trained and evaluated our models with the following key dependencies:
 
 - Pytorch 1.2.0
 
-- Transformers 2.1.0
+- nltk 3.5
 
 
-Run ```pip install -r requirements.txt ``` to install the exactly same dependencies as our experiments. However, we also verified that using the latest Pytorch 1.8.0 and Transformers 4.4.2 can also produce similar results.  
+Run ```pip install -r requirements.txt ``` to install the exactly same dependencies as our experiments. However, we also verified that using the latest Pytorch 1.8.0 can also produce similar results.  
 
 ### Data
 

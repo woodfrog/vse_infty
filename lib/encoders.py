@@ -3,9 +3,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
-from collections import OrderedDict
-
-from transformers import BertModel
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 from lib.modules.resnet import ResnetFeatureExtractor
 from lib.modules.aggr.gpo import GPO
@@ -14,6 +12,7 @@ from lib.modules.mlp import MLP
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 def l1norm(X, dim, eps=1e-8):
     """L1-normalize columns of X
@@ -53,11 +52,12 @@ def maxk(x, dim, k):
     return x.gather(dim, index)
 
 
-def get_text_encoder(embed_size, no_txtnorm=False):
-    return EncoderText(embed_size, no_txtnorm=no_txtnorm)
+def get_text_encoder(vocab_size, embed_size, word_dim, num_layers, use_bi_gru=True, no_txtnorm=False):
+    return EncoderText(vocab_size, embed_size, word_dim, num_layers, use_bi_gru=use_bi_gru,
+                       no_txtnorm=no_txtnorm)
 
 
-def get_image_encoder(data_name, img_dim, embed_size, precomp_enc_type='basic',
+def get_image_encoder(img_dim, embed_size, precomp_enc_type='basic',
                       backbone_source=None, backbone_path=None, no_imgnorm=False):
     """A wrapper to image encoders. Chooses between an different encoders
     that uses precomputed image features.
@@ -106,6 +106,7 @@ class EncoderImageAggr(nn.Module):
             features = l2norm(features, dim=-1)
 
         return features
+
 
 class EncoderImageFull(nn.Module):
     def __init__(self, backbone_cnn, img_dim, embed_size, precomp_enc_type='basic', no_imgnorm=False):
@@ -160,26 +161,40 @@ class EncoderImageFull(nn.Module):
         logger.info('Backbone unfreezed, fixed blocks {}'.format(self.backbone.get_fixed_blocks()))
 
 
-# Language Model with BERT
+# Language Model with BiGRU
 class EncoderText(nn.Module):
-    def __init__(self, embed_size, no_txtnorm=False):
+    def __init__(self, vocab_size, embed_size, word_dim, num_layers, use_bi_gru=True, no_txtnorm=False):
         super(EncoderText, self).__init__()
         self.embed_size = embed_size
         self.no_txtnorm = no_txtnorm
 
-        self.bert = BertModel.from_pretrained('bert-base-uncased')
-        self.linear = nn.Linear(768, embed_size)
+        # word embedding
+        self.embed = nn.Embedding(vocab_size, word_dim)
+
         self.gpool = GPO(32, 32)
+        # caption embedding
+        self.rnn = nn.GRU(word_dim, embed_size, num_layers, batch_first=True, bidirectional=use_bi_gru)
+        self.init_weights()
+
+    def init_weights(self):
+        self.embed.weight.data.uniform_(-0.1, 0.1)
 
     def forward(self, x, lengths):
         """Handles variable size captions
         """
         # Embed word ids to vectors
-        bert_attention_mask = (x != 0).float()
-        bert_emb = self.bert(x, bert_attention_mask)[0]  # B x N x D
-        cap_len = lengths
+        x_emb = self.embed(x)
 
-        cap_emb = self.linear(bert_emb)
+        self.rnn.flatten_parameters()
+        packed = pack_padded_sequence(x_emb, lengths.cpu(), batch_first=True)
+
+        # Forward propagate RNN
+        out, _ = self.rnn(packed)
+
+        # Reshape *final* output to (batch_size, hidden_size)
+        padded = pad_packed_sequence(out, batch_first=True)
+        cap_emb, cap_len = padded
+        cap_emb = (cap_emb[:, :, :cap_emb.size(2) // 2] + cap_emb[:, :, cap_emb.size(2) // 2:]) / 2
 
         pooled_features, pool_weights = self.gpool(cap_emb, cap_len.to(cap_emb.device))
 

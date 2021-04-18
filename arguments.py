@@ -19,6 +19,8 @@ def get_argument_parser():
                         help='Dimensionality of the word embedding.')
     parser.add_argument('--embed_size', default=1024, type=int,
                         help='Dimensionality of the joint embedding.')
+    parser.add_argument('--num_layers', default=1, type=int,
+                        help='Number of GRU layers.')
     parser.add_argument('--grad_clip', default=2., type=float,
                         help='Gradient clipping threshold.')
     parser.add_argument('--learning_rate', default=.0002, type=float,

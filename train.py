@@ -3,8 +3,8 @@ import os
 import time
 import numpy as np
 import torch
-from transformers import BertTokenizer
 
+from lib.vocab import deserialize_vocab
 from lib.datasets import image_caption
 from lib.vse import VSEModel
 from lib.evaluation import i2t, t2i, AverageMeter, LogCollector, encode_data, compute_sim
@@ -29,12 +29,17 @@ def main():
     logger.info(opt)
 
     # Load Vocabulary
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-    vocab = tokenizer.vocab
+    if 'coco' in opt.data_name:
+        vocab_file = 'coco_precomp_vocab.json'
+    else:
+        vocab_file = 'f30k_precomp_vocab.json'
+    vocab = deserialize_vocab(os.path.join(opt.vocab_path, vocab_file))
+    vocab.add_word('<mask>')  # add the mask, for testing cloze
+    logger.info('Add <mask> token into the vocab')
     opt.vocab_size = len(vocab)
 
     train_loader, val_loader = image_caption.get_loaders(
-        opt.data_path, opt.data_name, tokenizer, opt.batch_size, opt.workers, opt)
+        opt.data_path, opt.data_name, vocab, opt.batch_size, opt.workers, opt)
 
     model = VSEModel(opt)
 
@@ -48,7 +53,7 @@ def main():
             checkpoint = torch.load(opt.resume)
             start_epoch = checkpoint['epoch']
             best_rsum = checkpoint['best_rsum']
-            if not model.is_data_parallel:
+            if opt.precomp_enc_type == 'backbone' and not model.is_data_parallel:
                 model.make_data_parallel()
             model.load_state_dict(checkpoint['model'])
             # Eiters is used to show logs as the continuation of another training
@@ -61,7 +66,7 @@ def main():
         else:
             logger.info("=> no checkpoint found at '{}'".format(opt.resume))
 
-    if not model.is_data_parallel:
+    if opt.precomp_enc_type == 'backbone' and not model.is_data_parallel:
         model.make_data_parallel()
 
     # Train the Model
