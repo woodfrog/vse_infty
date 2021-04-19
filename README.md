@@ -47,7 +47,7 @@ The following tables show partial results of image-to-text retrieval on COCO and
 | |Backbone|R1|R5|R1|R5|Link|
 |---|---|---|---|---|---|---|
 |SCAN | BUTD region ||67.4|90.3|48.6|77.7| - |
-|VSRN (Ensemble) | BUTD region (Ensemble)	|71.3|90.6|54.7|81.8| - |
+|VSRN (Ensemble) | BUTD region |71.3|90.6|54.7|81.8| - |
 |VSEInfty | BUTD region |**81.7**|**95.4**|**61.4**|**85.9**|[Here]()|
 |VSEInfty | BUTD grid |**81.5**|**97.1**|**63.7**|**88.3**|[Here]()| 
 |VSEInfty | WSL grid |**88.4**|**98.3**|**74.2**|**93.7**|[Here]()|
