@@ -34,23 +34,23 @@ The following tables show partial results of image-to-text retrieval on COCO and
 
 #### Results of 5-fold evaluation on COCO 1K Test Split
 
-| |R1|R5|R1|R5|Link|
-|---|---|---|---|---|---|
-|SCAN	|72.7|94.8|58.8|88.4| - |
-|VSRN (ensemble)	|76.2|94.8|62.8|89.7| - |
-|VSEInfty w/ BUTD region |**79.7**|**96.4**|**64.8**|**91.4**|[Here]()|
-|VSEInfty w/ BUTD grid |**80.4**|**96.8**|**66.4**|**92.1**|[Here]()|
-|VSEInfty w/ WSL grid |**84.5**|**98.1**|**72.0**|**93.9**|[Here]()|
+| |Backbone|R1|R5|R1|R5|Link|
+|---|---|---|---|---|---|---|
+|SCAN | BUTD region |72.7|94.8|58.8|88.4| - |
+|VSRN | BUTD region (Ensemble)	|76.2|94.8|62.8|89.7| - |
+|VSEInfty | BUTD region |**79.7**|**96.4**|**64.8**|**91.4**|[Here]()|
+|VSEInfty | BUTD grid |**80.4**|**96.8**|**66.4**|**92.1**|[Here]()|
+|VSEInfty | WSL grid |**84.5**|**98.1**|**72.0**|**93.9**|[Here]()|
 
 #### Results on Flickr30K Test Split
 
-| |R1|R5|R1|R5|Link|
-|---|---|---|---|---|---|
-|SCAN	|67.4|90.3|48.6|77.7| - |
-|VSRN (ensemble)	|71.3|90.6|54.7|81.8| - |
-|VSEInfty w/ BUTD region |**81.7**|**95.4**|**61.4**|**85.9**|[Here]()|
-|VSEInfty w/ BUTD grid |**81.5**|**97.1**|**63.7**|**88.3**|[Here]()| 
-|VSEInfty w/ WSL grid |**88.4**|**98.3**|**74.2**|**93.7**|[Here]()|
+| |Backbone|R1|R5|R1|R5|Link|
+|---|---|---|---|---|---|---|
+|SCAN | BUTD region ||67.4|90.3|48.6|77.7| - |
+|VSRN | BUTD region (Ensemble)	|71.3|90.6|54.7|81.8| - |
+|VSEInfty | BUTD region |**81.7**|**95.4**|**61.4**|**85.9**|[Here]()|
+|VSEInfty | BUTD grid |**81.5**|**97.1**|**63.7**|**88.3**|[Here]()| 
+|VSEInfty | WSL grid |**88.4**|**98.3**|**74.2**|**93.7**|[Here]()|
 
 
 ## Preparation
