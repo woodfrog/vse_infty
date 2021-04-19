@@ -30,14 +30,14 @@ modality and feature extractor, and improves VSE models at negligible extra comp
 
 ### Image-text Matching Results
 
-The following tables show partial results of image-to-text retrieval on COCO and Flickr30K datasets. In these experiments, we use BERT-base as the text encoder for our methods. This branch provides the code and pre-trained models for using BERT as the text backbone, please check out to the ```bigru``` branch for the code and pre-trained models for using BiGRU as the text backbone.
+The following tables show partial results of image-to-text retrieval on COCO and Flickr30K datasets. In these experiments, we use BERT-base as the text encoder for our methods. This branch provides our code and pre-trained models for **using BERT as the text backbone**, please check out to **the ```bigru``` branch** for the code and pre-trained models for using BiGRU as the text backbone.
 
 #### Results of 5-fold evaluation on COCO 1K Test Split
 
 | |Backbone|R1|R5|R1|R5|Link|
 |---|---|---|---|---|---|---|
 |SCAN | BUTD region |72.7|94.8|58.8|88.4| - |
-|VSRN | BUTD region (Ensemble)	|76.2|94.8|62.8|89.7| - |
+|VSRN (Ensemble) | BUTD region	|76.2|94.8|62.8|89.7| - |
 |VSEInfty | BUTD region |**79.7**|**96.4**|**64.8**|**91.4**|[Here]()|
 |VSEInfty | BUTD grid |**80.4**|**96.8**|**66.4**|**92.1**|[Here]()|
 |VSEInfty | WSL grid |**84.5**|**98.1**|**72.0**|**93.9**|[Here]()|
@@ -47,7 +47,7 @@ The following tables show partial results of image-to-text retrieval on COCO and
 | |Backbone|R1|R5|R1|R5|Link|
 |---|---|---|---|---|---|---|
 |SCAN | BUTD region ||67.4|90.3|48.6|77.7| - |
-|VSRN | BUTD region (Ensemble)	|71.3|90.6|54.7|81.8| - |
+|VSRN (Ensemble) | BUTD region (Ensemble)	|71.3|90.6|54.7|81.8| - |
 |VSEInfty | BUTD region |**81.7**|**95.4**|**61.4**|**85.9**|[Here]()|
 |VSEInfty | BUTD grid |**81.5**|**97.1**|**63.7**|**88.3**|[Here]()| 
 |VSEInfty | WSL grid |**88.4**|**98.3**|**74.2**|**93.7**|[Here]()|
