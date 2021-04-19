@@ -40,7 +40,9 @@ The following tables show partial results of image-to-text retrieval on COCO and
 |VSRN (Ensemble) | BUTD region	|76.2|94.8|62.8|89.7| - |
 |VSEInfty | BUTD region |**78.5**|**96.0**|**61.7**|**90.3**|[Here]()|
 |VSEInfty | BUTD grid |**78.0**|**95.8**|**62.6**|**90.6**|[Here]()|
-|VSEInfty | BUTD region + grid |**80.0**|**97.0**|**64.8**|**91.6**| - |
+|VSEInfty (Ensemble) | BUTD region + grid |**80.0**|**97.0**|**64.8**|**91.6**| - |
+
+Note that the last raw is the ensemble of the models from the 3rd and 4th row.
 
 #### Results on Flickr30K Test Split
 
@@ -50,7 +52,7 @@ The following tables show partial results of image-to-text retrieval on COCO and
 |VSRN (Ensemble)| BUTD region	|71.3|90.6|54.7|81.8| - |
 |VSEInfty | BUTD region |**76.5**|**94.2**|**56.4**|**83.4**|[Here]()|
 |VSEInfty | BUTD grid |**77.9**|**93.7**|**57.5**|**83.4**|[Here]()| 
-|VSEInfty | BUTD region + grid|**80.7**|**96.4**|**60.8**|**86.3**| - |
+|VSEInfty (Ensemble) | BUTD region + grid|**80.7**|**96.4**|**60.8**|**86.3**| - |
 
 
 ## Preparation
