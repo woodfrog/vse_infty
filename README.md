@@ -38,9 +38,9 @@ The following tables show partial results of image-to-text retrieval on COCO and
 |---|---|---|---|---|---|---|
 |SCAN | BUTD region |72.7|94.8|58.8|88.4| - |
 |VSRN (Ensemble) | BUTD region	|76.2|94.8|62.8|89.7| - |
-|VSEInfty | BUTD region |**79.7**|**96.4**|**64.8**|**91.4**|[Here]()|
-|VSEInfty | BUTD grid |**80.4**|**96.8**|**66.4**|**92.1**|[Here]()|
-|VSEInfty | WSL grid |**84.5**|**98.1**|**72.0**|**93.9**|[Here]()|
+|VSEInfty | BUTD region |**79.7**|**96.4**|**64.8**|**91.4**|[Here](https://drive.google.com/drive/folders/1pbWTSaTPGymGiOZJCo_eTYJJJry2D-H7?usp=sharing)|
+|VSEInfty | BUTD grid |**80.4**|**96.8**|**66.4**|**92.1**|[Here](https://drive.google.com/drive/folders/13cOrd9WIwMHZCfEl2BB3OGMaqXqNas4W?usp=sharing)|
+|VSEInfty | WSL grid |**84.5**|**98.1**|**72.0**|**93.9**|[Here](https://drive.google.com/drive/folders/1gZF0253awmnj3HK_4Wsupc0hmxyCXN9n?usp=sharing)|
 
 #### Results on Flickr30K Test Split
 
@@ -48,9 +48,9 @@ The following tables show partial results of image-to-text retrieval on COCO and
 |---|---|---|---|---|---|---|
 |SCAN | BUTD region |67.4|90.3|48.6|77.7| - |
 |VSRN (Ensemble) | BUTD region |71.3|90.6|54.7|81.8| - |
-|VSEInfty | BUTD region |**81.7**|**95.4**|**61.4**|**85.9**|[Here]()|
-|VSEInfty | BUTD grid |**81.5**|**97.1**|**63.7**|**88.3**|[Here]()| 
-|VSEInfty | WSL grid |**88.4**|**98.3**|**74.2**|**93.7**|[Here]()|
+|VSEInfty | BUTD region |**81.7**|**95.4**|**61.4**|**85.9**|[Here](https://drive.google.com/drive/folders/1Xm4IPQlefQFt550yVg6i9CVp60zGvU8a?usp=sharing)|
+|VSEInfty | BUTD grid |**81.5**|**97.1**|**63.7**|**88.3**|[Here](https://drive.google.com/drive/folders/1-8KWv26_X4CVAAYKXYef6NSUMHmgHYfC?usp=sharing)| 
+|VSEInfty | WSL grid |**88.4**|**98.3**|**74.2**|**93.7**|[Here](https://drive.google.com/drive/folders/1YflHYDGOjt9OWPhxGhfyxtmejZK6dreD?usp=sharing)|
 
 
 ## Preparation
