@@ -81,9 +81,9 @@ data
 │   ├── images   # raw coco images
 │   │      ├── train2014
 │   │      └── val2014
-│	│
-│	├── cxc_annots # annotations for evaluating COCO-trained models on the CxC benchmark
-│	│
+│   │
+│   ├── cxc_annots # annotations for evaluating COCO-trained models on the CxC benchmark
+│   │
 │   └── id_mapping.json  # mapping from coco-id to image's file name
 │   
 │
@@ -109,6 +109,9 @@ The download links for original COCO/F30K images, precomputed BUTD features, and
 The ```id_mapping.json``` files are the mapping from image index (ie, the COCO id for COCO images) to corresponding filenames, we generated these mappings to eliminate the need of the ```pycocotools``` package. 
 
 ```weights/original_updowmn_backbone.pth``` is the pre-trained ResNet-101 weights from [Bottom-up Attention Model](https://github.com/peteanderson80/bottom-up-attention), we converted the original Caffe weights into Pytorch. Please download it from [this link]()
+
+
+The ```data/coco/cxc_annots``` directory contains the necessary data files for running the [Criscrossed Caption (CxC) evaluation](https://github.com/google-research-datasets/Crisscrossed-Captions). Since there is no official evaluation protocol in the CxC repo, we processed their raw data files and generated these data files to implement our own evaluation.  We have verified our implementation by aligning the evaluation results of [the official VSRN model](https://github.com/KunpengLi1994/VSRN) with the ones reported by the [CxC paper](https://arxiv.org/abs/2004.15020). 
 
 ## Training
 
@@ -145,8 +148,6 @@ For evaluating pre-trained COCO models on the CxC dataset, use the command:
 ```
 CUDA_VISIBLE_DEVICES=0,1,2,3 python3 eval.py --dataset coco --data_path /tmp/data/coco --evaluate_cxc
 ```
-
-Note that the CxC evaluation code is implemented by ourselves since the original paper didn't provide an official protocol. We verified our implementation with the official [VSRN](https://github.com/KunpengLi1994/VSRN) models by aligning the evaluation results of VSRN model with the ones reported by the CxC paper. 
 
 
 For evaluating two-model ensemble, first run single-model evaluation commands above with the argument ```--save_results```, and then use ```eval_ensemble.py``` to get the results (need to manually specify the paths to the saved results). 
