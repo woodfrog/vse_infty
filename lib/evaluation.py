@@ -232,7 +232,7 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False, save_path=Non
                 (img_embs.shape[0] / 5, cap_embs.shape[0]))
 
     if cxc:
-        eval_cxc(img_embs, cap_embs)
+        eval_cxc(img_embs, cap_embs, data_path)
     else:
         if not fold5:
             # no cross-validation, full evaluation
@@ -247,7 +247,7 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False, save_path=Non
                 logger.info('Save the similarity into {}'.format(save_path))
 
             end = time.time()
-            logger.info("calculate similarity time:".format(end - start))
+            logger.info("calculate similarity time: {}".format(end - start))
 
             r, rt = i2t(npts, sims, return_ranks=True)
             ri, rti = t2i(npts, sims, return_ranks=True)
@@ -268,7 +268,7 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False, save_path=Non
                 start = time.time()
                 sims = compute_sim(img_embs_shard, cap_embs_shard)
                 end = time.time()
-                logger.info("calculate similarity time:".format(end - start))
+                logger.info("calculate similarity time: {}".format(end - start))
 
                 npts = img_embs_shard.shape[0]
                 r, rt0 = i2t(npts, sims, return_ranks=True)
@@ -382,13 +382,16 @@ def t2i(npts, sims, return_ranks=False, mode='coco'):
         return (r1, r5, r10, medr, meanr)
 
 
-### CxC related evaluation.
-def eval_cxc(images, captions):
+"""
+    CxC related evaluation.
+"""
+
+def eval_cxc(images, captions, data_path):
     import os
     import json
-    cxc_annot_base = 'data/coco/cxc_annots'
-    img_id_path = 'data/coco/precomp/testall_ids.txt'
-    cap_id_path = 'data/coco/precomp/testall_capids.txt'
+    cxc_annot_base = os.path.join(data_path, 'cxc_annots')
+    img_id_path = os.path.join(cxc_annot_base, 'testall_ids.txt')
+    cap_id_path = os.path.join(cxc_annot_base, 'testall_capids.txt')
 
     images = images[::5, :]
 
@@ -407,12 +410,11 @@ def eval_cxc(images, captions):
     with open(os.path.join(cxc_annot_base, 'cxc_t2t.json')) as f_t2t:
         cxc_t2t = json.load(f_t2t)
 
-
     sims = compute_sim(images, captions)
-    #t2i_recalls = cxc_inter(sims.T, img_ids, cap_ids, cxc_it['t2i'])
-    #i2t_recalls = cxc_inter(sims, cap_ids, img_ids, cxc_it['i2t'])
-    #logger.info('T2I R@1: {}, R@5: {}, R@10: {}'.format(*t2i_recalls))
-    #logger.info('I2T R@1: {}, R@5: {}, R@10: {}'.format(*i2t_recalls))
+    t2i_recalls = cxc_inter(sims.T, img_ids, cap_ids, cxc_it['t2i'])
+    i2t_recalls = cxc_inter(sims, cap_ids, img_ids, cxc_it['i2t'])
+    logger.info('T2I R@1: {}, R@5: {}, R@10: {}'.format(*t2i_recalls))
+    logger.info('I2T R@1: {}, R@5: {}, R@10: {}'.format(*i2t_recalls))
 
     i2i_recalls = cxc_intra(images, img_ids, cxc_i2i)
     t2t_recalls = cxc_intra(captions, cap_ids, cxc_t2t, text=True)
@@ -443,17 +445,7 @@ def cxc_inter(sims, data_ids, query_ids, annot):
 
 
 def cxc_intra(embs, data_ids, annot, text=False):
-    if not text:
-        pos_indices = list()
-        for idx, data_id in enumerate(data_ids):
-            sim_items = annot[data_id]
-            pos_items = [item for item in sim_items if item[1] >= 3.0]
-            if len(pos_items) > 0:
-                pos_indices.append(idx)
-        logger.info('There are {} examples with positive annotation'.format(len(pos_indices)))
-
-        data_ids = [data_ids[idx] for idx in pos_indices]
-        embs = embs[np.array(pos_indices), :]
+    pos_thresh = 3.0 if text else 2.5 # threshold for positive pairs according to the CxC paper
 
     sims = compute_sim(embs, embs)
     np.fill_diagonal(sims, 0)
@@ -461,21 +453,18 @@ def cxc_intra(embs, data_ids, annot, text=False):
     ranks = list()
     for idx, data_id in enumerate(data_ids):
         sim_items = annot[data_id]
-        pos_items = [item for item in sim_items if item[1] >= 3.0]
+        pos_items = [item for item in sim_items if item[1] >= pos_thresh]
         rank = 1e20
         inds = np.argsort(sims[idx])[::-1]
         if text:
-            coco_pos = list(range(idx//5 * 5, (idx//5+1) * 5))
+            coco_pos = list(range(idx // 5 * 5, (idx // 5 + 1) * 5))
             coco_pos.remove(idx)
             pos_indices = coco_pos
             pos_indices.extend([data_ids.index(str(pos_item[0])) for pos_item in pos_items])
         else:
-            #all_indices = [data_ids.index(str(item[0])) for item in sim_items]
             pos_indices = [data_ids.index(str(pos_item[0])) for pos_item in pos_items]
-            if len(pos_indices) == 0:
+            if len(pos_indices) == 0:  # skip it since there is positive example in the annotation
                 continue
-            #inds = list(inds)
-            #inds = np.array(list(filter(lambda x: x in all_indices,inds)))
         for pos_idx in pos_indices:
             tmp = np.where(inds == pos_idx)[0][0]
             if tmp < rank:

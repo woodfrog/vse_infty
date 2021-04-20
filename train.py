@@ -28,7 +28,7 @@ def main():
     logger = logging.getLogger(__name__)
     logger.info(opt)
 
-    # Load Vocabulary
+    # Load Tokenizer and Vocabulary
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     vocab = tokenizer.vocab
     opt.vocab_size = len(vocab)
@@ -196,7 +196,7 @@ def validate(opt, val_loader, model):
     start = time.time()
     sims = compute_sim(img_embs, cap_embs)
     end = time.time()
-    logger.info("calculate similarity time:".format(end - start))
+    logger.info("calculate similarity time: {}".format(end - start))
 
     # caption retrieval
     npts = img_embs.shape[0]
@@ -260,22 +260,6 @@ def adjust_learning_rate(opt, optimizer, epoch, lr_schedules):
             new_lr = old_lr * 0.1
             param_group['lr'] = new_lr
             logger.info('new lr {}'.format(new_lr))
-
-
-def accuracy(output, target, topk=(1,)):
-    """Computes the precision@k for the specified values of k"""
-    maxk = max(topk)
-    batch_size = target.size(0)
-
-    _, pred = output.topk(maxk, 1, True, True)
-    pred = pred.t()
-    correct = pred.eq(target.view(1, -1).expand_as(pred))
-
-    res = []
-    for k in topk:
-        correct_k = correct[:k].view(-1).float().sum(0)
-        res.append(correct_k.mul_(100.0 / batch_size))
-    return res
 
 
 def count_params(model):

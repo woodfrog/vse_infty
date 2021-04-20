@@ -81,6 +81,9 @@ data
 │   ├── images   # raw coco images
 │   │      ├── train2014
 │   │      └── val2014
+│	│
+│	├── cxc_annots # annotations for evaluating COCO-trained models on the CxC benchmark
+│	│
 │   └── id_mapping.json  # mapping from coco-id to image's file name
 │   
 │
@@ -105,7 +108,7 @@ The download links for original COCO/F30K images, precomputed BUTD features, and
 
 The ```id_mapping.json``` files are the mapping from image index (ie, the COCO id for COCO images) to corresponding filenames, we generated these mappings to eliminate the need of the ```pycocotools``` package. 
 
-```weights/original_updowmn_backbone.pth``` is the pre-trained ResNet-101 weights from [Bottom-up Attention Model](https://github.com/peteanderson80/bottom-up-attention), we converted the original Caffe weights into Pytorch.
+```weights/original_updowmn_backbone.pth``` is the pre-trained ResNet-101 weights from [Bottom-up Attention Model](https://github.com/peteanderson80/bottom-up-attention), we converted the original Caffe weights into Pytorch. Please download it from [this link]()
 
 ## Training
 
@@ -125,6 +128,28 @@ To use other CNN initializations for the grid image feature, change the ```--bac
 
 ## Evaluation
 
-Run ```eval.py``` to evaluate specified models on either COCO and Flickr30K. 
+Run ```eval.py``` to evaluate specified models on either COCO and Flickr30K. For evaluting pre-trained models on COCO, use the following command (assuming there are 4 GPUs, and the local data path is /tmp/data):
+
+```
+CUDA_VISIBLE_DEVICES=0,1,2,3 python3 eval.py --dataset coco --data_path /tmp/data/coco
+```
+
+For evaluting pre-trained models on Flickr-30K, use the command: 
+
+```
+CUDA_VISIBLE_DEVICES=0,1,2,3 python3 eval.py --dataset f30k --data_path /tmp/data/f30k
+```
+
+For evaluating pre-trained COCO models on the CxC dataset, use the command:
+
+```
+CUDA_VISIBLE_DEVICES=0,1,2,3 python3 eval.py --dataset coco --data_path /tmp/data/coco --evaluate_cxc
+```
+
+Note that the CxC evaluation code is implemented by ourselves since the original paper didn't provide an official protocol. We verified our implementation with the official [VSRN](https://github.com/KunpengLi1994/VSRN) models by aligning the evaluation results of VSRN model with the ones reported by the CxC paper. 
+
+
+For evaluating two-model ensemble, first run single-model evaluation commands above with the argument ```--save_results```, and then use ```eval_ensemble.py``` to get the results (need to manually specify the paths to the saved results). 
+
 
 
