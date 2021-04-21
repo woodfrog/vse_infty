@@ -30,7 +30,7 @@ modality and feature extractor, and improves VSE models at negligible extra comp
 
 ### Image-text Matching Results
 
-The following tables show partial results of image-to-text retrieval on COCO and Flickr30K datasets. In these experiments, we use BERT-base as the text encoder for our methods. This branch provides our code and pre-trained models for **using BERT as the text backbone**, please check out to **the ```bigru``` branch** for the code and pre-trained models for using BiGRU as the text backbone.
+The following tables show partial results of image-to-text retrieval on COCO and Flickr30K datasets. In these experiments, we use BERT-base as the text encoder for our methods. This branch provides our code and pre-trained models for **using BERT as the text backbone**, please check out to [**the ```bigru``` branch**](https://github.com/woodfrog/vse_infty/tree/bigru) for the code and pre-trained models for using BiGRU as the text backbone.
 
 Note that the VSE++ entries in the following tables are the VSE++ model with the specified feature backbones, thus the results are different from the original VSE++ paper.  
 
