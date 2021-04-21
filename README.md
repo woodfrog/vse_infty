@@ -32,6 +32,8 @@ modality and feature extractor, and improves VSE models at negligible extra comp
 
 The following tables show partial results of image-to-text retrieval on COCO and Flickr30K datasets. In these experiments, we use BERT-base as the text encoder for our methods. This branch provides our code and pre-trained models for **using BERT as the text backbone**, please check out to **the ```bigru``` branch** for the code and pre-trained models for using BiGRU as the text backbone.
 
+Note that the VSE++ entries in the following tables are the VSE++ model with the specified feature backbones, thus the results are different from the original VSE++ paper.  
+
 #### Results of 5-fold evaluation on COCO 1K Test Split
 
 | |Visual Backbone|Text Backbone|R1|R5|R1|R5|Link|
@@ -49,6 +51,15 @@ The following tables show partial results of image-to-text retrieval on COCO and
 |VSEInfty | BUTD region |BERT-base|**81.7**|**95.4**|**61.4**|**85.9**|[Here](https://drive.google.com/drive/folders/1Xm4IPQlefQFt550yVg6i9CVp60zGvU8a?usp=sharing)|
 |VSEInfty | BUTD grid |BERT-base|**81.5**|**97.1**|**63.7**|**88.3**|[Here](https://drive.google.com/drive/folders/1-8KWv26_X4CVAAYKXYef6NSUMHmgHYfC?usp=sharing)| 
 |VSEInfty | WSL grid |BERT-base|**88.4**|**98.3**|**74.2**|**93.7**|[Here](https://drive.google.com/drive/folders/1YflHYDGOjt9OWPhxGhfyxtmejZK6dreD?usp=sharing)|
+
+#### Result (in R@1) on Crisscrossed Caption benchmark (trained on COCO)
+
+| |Visual Backbone|Text Backbone|I2T|T2I|T2T|I2I|
+|---|:---:|:---:|---|---|---|---|
+|[VSRN](https://arxiv.org/pdf/1909.02701.pdf) | BUTD region |BiGRU| 52.4 | 40.1 | 41.0 | 44.2 | 
+|[DE](https://arxiv.org/abs/2004.15020) |  EfficientNet-B4 grid |BERT-base|55.9|41.7|42.6|38.5| 
+|VSEInfty | BUTD grid |BERT-base|60.6| 46.2 | 45.9 | 44.4 | 
+|VSEInfty | WSL grid |BERT-base| 67.9 | 53.6 | 46.7 | 51.3 |
 
 
 ## Preparation
@@ -111,7 +122,7 @@ The ```id_mapping.json``` files are the mapping from image index (ie, the COCO i
 ```weights/original_updowmn_backbone.pth``` is the pre-trained ResNet-101 weights from [Bottom-up Attention Model](https://github.com/peteanderson80/bottom-up-attention), we converted the original Caffe weights into Pytorch. Please download it from [this link]()
 
 
-The ```data/coco/cxc_annots``` directory contains the necessary data files for running the [Criscrossed Caption (CxC) evaluation](https://github.com/google-research-datasets/Crisscrossed-Captions). Since there is no official evaluation protocol in the CxC repo, we processed their raw data files and generated these data files to implement our own evaluation.  We have verified our implementation by aligning the evaluation results of [the official VSRN model](https://github.com/KunpengLi1994/VSRN) with the ones reported by the [CxC paper](https://arxiv.org/abs/2004.15020). 
+The ```data/coco/cxc_annots``` directory contains the necessary data files for running the [Criscrossed Caption (CxC) evaluation](https://github.com/google-research-datasets/Crisscrossed-Captions). Since there is no official evaluation protocol in the CxC repo, we processed their raw data files and generated these data files to implement our own evaluation.  We have verified our implementation by aligning the evaluation results of [the official VSRN model](https://github.com/KunpengLi1994/VSRN) with the ones reported by the [CxC paper](https://arxiv.org/abs/2004.15020) Please download the data files at [this link]().
 
 ## Training
 
