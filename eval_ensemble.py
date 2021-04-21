@@ -1,4 +1,9 @@
+import logging
 from lib import evaluation
+
+logging.basicConfig()
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 # Evaluate model ensemble
 paths = ['runs/coco_butd_grid_bert/results_coco.npy',

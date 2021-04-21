@@ -134,7 +134,7 @@ def eval_ensemble(results_paths, fold5=False):
     all_sims = []
     all_npts = []
     for sim_path in results_paths:
-        results = np.load(sim_path).tolist()
+        results = np.load(sim_path, allow_pickle=True).tolist()
         npts = results['npts']
         sims = results['sims']
         all_npts.append(npts)

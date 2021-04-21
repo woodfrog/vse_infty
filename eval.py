@@ -19,7 +19,7 @@ def main():
 
     if opt.dataset == 'coco':
         weights_bases = [
-            #'runs/release_weights/coco_butd_region_bert',
+            'runs/release_weights/coco_butd_region_bert',
             'runs/release_weights/coco_butd_grid_bert',
             'runs/release_weights/coco_wsl_grid_bert',
         ]
