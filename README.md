@@ -30,7 +30,9 @@ modality and feature extractor, and improves VSE models at negligible extra comp
 
 ### Image-text Matching Results
 
-The following tables show partial results of image-to-text retrieval on COCO and Flickr30K datasets. In these experiments, we use BERT-base as the text encoder for our methods. This branch provides the code and pre-trained models for using **BiGRU as the text backbone**, please check out to the **```master``` branch** for the code and pre-trained models for using BERT as the text backbone.
+The following tables show partial results of image-to-text retrieval on COCO and Flickr30K datasets. In these experiments, we use BERT-base as the text encoder for our methods. This branch provides the code and pre-trained models for using **BiGRU as the text backbone**, please check out to the [**```master``` branch**](https://github.com/woodfrog/vse_infty) for the code and pre-trained models for using BERT as the text backbone.
+
+Note that the VSE++ entries in the following tables are the VSE++ model with the specified feature backbones, thus the results are different from the original VSE++ paper.  
 
 #### Results of 5-fold evaluation on COCO 1K Test Split
 
@@ -87,6 +89,9 @@ data
 │   ├── images   # raw coco images
 │   │      ├── train2014
 │   │      └── val2014
+│   │
+│   ├── cxc_annots # annotations for evaluating COCO-trained models on the CxC benchmark
+│   │
 │   └── id_mapping.json  # mapping from coco-id to image's file name
 │   
 │
@@ -111,7 +116,10 @@ The download links for original COCO/F30K images, precomputed BUTD features, and
 
 The ```id_mapping.json``` files are the mapping from image index (ie, the COCO id for COCO images) to corresponding filenames, we generated these mappings to eliminate the need of the ```pycocotools``` package. 
 
-```weights/original_updowmn_backbone.pth``` is the pre-trained ResNet-101 weights from [Bottom-up Attention Model](https://github.com/peteanderson80/bottom-up-attention), we converted the original Caffe weights into Pytorch.
+```weights/original_updowmn_backbone.pth``` is the pre-trained ResNet-101 weights from [Bottom-up Attention Model](https://github.com/peteanderson80/bottom-up-attention), we converted the original Caffe weights into Pytorch. Please download it from [this link](https://drive.google.com/file/d/1gNdV1Qx_7yYzkhHrzqbP-bbNkdrKw_w1/view?usp=sharing).
+
+The ```data/coco/cxc_annots``` directory contains the necessary data files for running the [Criscrossed Caption (CxC) evaluation](https://github.com/google-research-datasets/Crisscrossed-Captions). Since there is no official evaluation protocol in the CxC repo, we processed their raw data files and generated these data files to implement our own evaluation.  We have verified our implementation by aligning the evaluation results of [the official VSRN model](https://github.com/KunpengLi1994/VSRN) with the ones reported by the [CxC paper](https://arxiv.org/abs/2004.15020) Please download the data files at [this link](https://drive.google.com/drive/folders/1Ikwge0usPrOpN6aoQxsgYQM6-gEuG4SJ?usp=sharing).
+
 
 ## Training
 
@@ -131,6 +139,25 @@ To use other CNN initializations for the grid image feature, change the ```--bac
 
 ## Evaluation
 
-Run ```eval.py``` to evaluate specified models on either COCO and Flickr30K. 
+Run ```eval.py``` to evaluate specified models on either COCO and Flickr30K. For evaluting pre-trained models on COCO, use the following command (assuming there are 4 GPUs, and the local data path is /tmp/data):
+
+```
+CUDA_VISIBLE_DEVICES=0,1,2,3 python3 eval.py --dataset coco --data_path /tmp/data/coco
+```
+
+For evaluting pre-trained models on Flickr-30K, use the command: 
+
+```
+CUDA_VISIBLE_DEVICES=0,1,2,3 python3 eval.py --dataset f30k --data_path /tmp/data/f30k
+```
+
+For evaluating pre-trained COCO models on the CxC dataset, use the command:
+
+```
+CUDA_VISIBLE_DEVICES=0,1,2,3 python3 eval.py --dataset coco --data_path /tmp/data/coco --evaluate_cxc
+```
+
+
+For evaluating two-model ensemble, first run single-model evaluation commands above with the argument ```--save_results```, and then use ```eval_ensemble.py``` to get the results (need to manually specify the paths to the saved results). 
 
 
