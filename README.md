@@ -124,13 +124,16 @@ The ```id_mapping.json``` files are the mapping from image index (ie, the COCO i
 
 The ```data/coco/cxc_annots``` directory contains the necessary data files for running the [Criscrossed Caption (CxC) evaluation](https://github.com/google-research-datasets/Crisscrossed-Captions). Since there is no official evaluation protocol in the CxC repo, we processed their raw data files and generated these data files to implement our own evaluation.  We have verified our implementation by aligning the evaluation results of [the official VSRN model](https://github.com/KunpengLi1994/VSRN) with the ones reported by the [CxC paper](https://arxiv.org/abs/2004.15020) Please download the data files at [this link](https://drive.google.com/drive/folders/1Ikwge0usPrOpN6aoQxsgYQM6-gEuG4SJ?usp=sharing).
 
+Please download all necessary data files and organize them in the above manner, the path to the ```data``` directory will be the argument to the training script as shown below.
+
 ## Training
 
-We provide example training scripts for:
+Assuming the data root is ```/tmp/data```, we provide example training scripts for:
 
 1. Grid feature with BUTD CNN for the image feature, BERT-base for the text feature. See ```train_grid.sh```
 
 2. BUTD Region feature for the image feature, BERT-base for the text feature. See ```train_region.sh```
+
 
 To use other CNN initializations for the grid image feature, change the ```--backbone_source``` argument to different values: 
 
