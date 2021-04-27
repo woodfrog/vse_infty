@@ -123,7 +123,7 @@ def main():
             'best_rsum': best_rsum,
             'opt': opt,
             'Eiters': model.Eiters,
-        }, is_best, filename='checkpoint.pth.tar'.format(epoch), prefix=opt.model_name + '/')
+        }, is_best, filename='checkpoint.pth'.format(epoch), prefix=opt.model_name + '/')
 
 
 def train(opt, train_loader, model, epoch, val_loader):
@@ -234,7 +234,7 @@ def validate(opt, val_loader, model):
     return currscore
 
 
-def save_checkpoint(state, is_best, filename='checkpoint.pth.tar', prefix=''):
+def save_checkpoint(state, is_best, filename='checkpoint.pth', prefix=''):
     logger = logging.getLogger(__name__)
     tries = 15
 
@@ -243,7 +243,7 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth.tar', prefix=''):
         try:
             torch.save(state, prefix + filename)
             if is_best:
-                torch.save(state, prefix + 'model_best.pth.tar')
+                torch.save(state, prefix + 'model_best.pth')
         except IOError as e:
             error = e
             tries -= 1
