@@ -83,7 +83,7 @@ class RawImageDataset(data.Dataset):
         caption = self.captions[index]
         caption_tokens = self.tokenizer.basic_tokenizer.tokenize(caption)
 
-        # Convert caption (string) to word ids.
+        # Convert caption (string) to word ids (with Size Augmentation at training time).
         target = process_caption(self.tokenizer, caption_tokens, self.train)
 
         image_id = self.images[img_index]
@@ -222,10 +222,10 @@ class PrecompRegionDataset(data.Dataset):
         caption = self.captions[index]
         caption_tokens = self.tokenizer.basic_tokenizer.tokenize(caption)
 
-        # Convert caption (string) to word ids.
+        # Convert caption (string) to word ids (with Size Augmentation at training time)
         target = process_caption(self.tokenizer, caption_tokens, self.train)
         image = self.images[img_index]
-        if self.train:
+        if self.train:  # Size augmentation for region feature
             num_features = image.shape[0]
             rand_list = np.random.rand(num_features)
             image = image[np.where(rand_list > 0.20)]

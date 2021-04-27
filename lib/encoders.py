@@ -119,7 +119,7 @@ class EncoderImageFull(nn.Module):
         base_features = self.backbone(images)
 
         if self.training:
-            # Size Augmentation, randomly drop grids
+            # Size Augmentation during training, randomly drop grids
             base_length = base_features.size(1)
             features = []
             feat_lengths = []
