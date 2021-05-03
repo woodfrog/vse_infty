@@ -98,6 +98,7 @@ class EncoderImageAggr(nn.Module):
         """Extract image feature vectors."""
         features = self.fc(images)
         if self.precomp_enc_type == 'basic':
+            # When using pre-extracted region features, add an extra MLP for embedding transformation
             features = self.mlp(images) + features
 
         features, pool_weights = self.gpool(features, image_lengths)

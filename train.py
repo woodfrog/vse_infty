@@ -99,12 +99,6 @@ def main():
                 model.unfreeze_backbone(1)
             else:
                 model.unfreeze_backbone(0)
-        elif opt.precomp_enc_type == 'last_res_block':
-            if epoch < opt.embedding_warmup_epochs:
-                model.freeze_backbone()
-                logger.info('All backbone weights are frozen, only train the embedding layers')
-            else:
-                model.unfreeze_backbone(0)
 
         # train for one epoch
         train(opt, train_loader, model, epoch, val_loader)
