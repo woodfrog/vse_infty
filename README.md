@@ -117,7 +117,7 @@ data
 
 The download links for original COCO/F30K images, precomputed BUTD features, and corresponding vocabularies are from the offical repo of [SCAN](https://github.com/kuanghuei/SCAN#download-data). The ```precomp``` folders contain pre-computed BUTD region features, ```data/coco/images``` contains raw MS-COCO images, and ```data/f30k/flickr30k-images``` contains raw Flickr30K images. 
 
-(Update: It seems that the download link for the pre-computed features in SCAN's repo is down, [this Google Drive link](https://drive.google.com/file/d/1E96FnbHOqzlQlJlxK2X_E4XVCqxiZS6E/view?usp=share_link) provides a copy of these files. Please unzip and follow the above file structures to organize the data.)
+(Update: It seems that the download link for the pre-computed features in SCAN's repo is down, [this Dropbox link](https://www.dropbox.com/sh/qp3fw9hqegpm914/AAC3D3kqkh5i4cgZOfVmlWCDa?dl=0) provides a copy of these files. Please download and follow the above file structures to organize the data.)
 
 The ```id_mapping.json``` files are the mapping from image index (ie, the COCO id for COCO images) to corresponding filenames, we generated these mappings to eliminate the need of the ```pycocotools``` package. 
 
