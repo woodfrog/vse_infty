@@ -41,8 +41,8 @@ Note that the VSE++ entries in the following tables are the VSE++ model with the
 |VSE++| BUTD region |BiGRU|68.5|92.6|54.0|85.6| - |
 |SCAN| BUTD region	| BiGRU |72.7|94.8|58.8|88.4| - |
 |VSRN (Ensemble) | BUTD region | BiGRU |76.2|94.8|62.8|89.7| - |
-|VSEInfty | BUTD region |BiGRU|**78.5**|**96.0**|**61.7**|**90.3**|[Here](https://drive.google.com/drive/folders/1KcjmDvqDSIM6jIiBTwRvzzvznxqH1TKv?usp=sharing)|
-|VSEInfty | BUTD grid |BiGRU|**78.0**|**95.8**|**62.6**|**90.6**|[Here](https://drive.google.com/drive/folders/12L2hwyhiY3wE6Uo-wgt-G03NRaxVZBhl?usp=sharing)|
+|VSEInfty | BUTD region |BiGRU|**78.5**|**96.0**|**61.7**|**90.3**|[Here](https://huggingface.co/cccjc/vse-infty/tree/main/coco_butd_region_bigru)|
+|VSEInfty | BUTD grid |BiGRU|**78.0**|**95.8**|**62.6**|**90.6**|[Here](https://huggingface.co/cccjc/vse-infty/tree/main/coco_butd_grid_bigru)|
 |VSEInfty (Ensemble) | BUTD region + grid |BiGRU|**80.0**|**97.0**|**64.8**|**91.6**| - |
 
 Note that the last raw is the ensemble of the models from the 3rd and 4th row.
@@ -54,8 +54,8 @@ Note that the last raw is the ensemble of the models from the 3rd and 4th row.
 |VSE++| BUTD region |BiGRU|62.2|86.6|45.7|73.6| - |
 |SCAN| BUTD region	| BiGRU |67.4|90.3|48.6|77.7| - |
 |VSRN (Ensemble)| BUTD region	| BiGRU |71.3|90.6|54.7|81.8| - |
-|VSEInfty | BUTD region |BiGRU|**76.5**|**94.2**|**56.4**|**83.4**|[Here](https://drive.google.com/drive/folders/1GwbsKSik3ppwZLKA4FSyzrsz-A6nj64c?usp=sharing)|
-|VSEInfty | BUTD grid |BiGRU|**77.9**|**93.7**|**57.5**|**83.4**|[Here](https://drive.google.com/drive/folders/1kW67osH98_KOlAHIGwTnMg5zAecQ3m4-?usp=sharing)| 
+|VSEInfty | BUTD region |BiGRU|**76.5**|**94.2**|**56.4**|**83.4**|[Here](https://huggingface.co/cccjc/vse-infty/tree/main/f30k_butd_region_bigru)|
+|VSEInfty | BUTD grid |BiGRU|**77.9**|**93.7**|**57.5**|**83.4**|[Here](https://huggingface.co/cccjc/vse-infty/tree/main/f30k_butd_grid_bigru)| 
 |VSEInfty (Ensemble) | BUTD region + grid|BiGRU|**80.7**|**96.4**|**60.8**|**86.3**| - |
 
 
