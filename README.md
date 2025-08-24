@@ -41,7 +41,7 @@ Note that the VSE++ entries in the following tables are the VSE++ model with the
 |VSE++| BUTD region |BERT-base|67.9|91.9|54.0|85.6| - |
 |VSEInfty | BUTD region |BERT-base|**79.7**|**96.4**|**64.8**|**91.4**|[Here](https://huggingface.co/cccjc/vse-infty/tree/main/coco_butd_region_bert)|
 |VSEInfty | BUTD grid |BERT-base|**80.4**|**96.8**|**66.4**|**92.1**|[Here](https://huggingface.co/cccjc/vse-infty/tree/main/coco_butd_grid_bert)|
-|VSEInfty | WSL grid |BERT-base|**84.5**|**98.1**|**72.0**|**93.9**|[Here](https://huggingface.co/cccjc/vse-infty/blob/main/coco_wsl_grid_bert/)|
+|VSEInfty | WSL grid |BERT-base|**84.5**|**98.1**|**72.0**|**93.9**|[Here](https://huggingface.co/cccjc/vse-infty/tree/main/coco_wsl_grid_bert/)|
 
 #### Results on Flickr30K Test Split
 
@@ -49,8 +49,8 @@ Note that the VSE++ entries in the following tables are the VSE++ model with the
 |---|:---:|:---:|---|---|---|---|---|
 |VSE++| BUTD region |BERT-base|63.4|87.2|45.6|76.4|- |
 |VSEInfty | BUTD region |BERT-base|**81.7**|**95.4**|**61.4**|**85.9**|[Here](https://huggingface.co/cccjc/vse-infty/tree/main/f30k_butd_region_bert/)|
-|VSEInfty | BUTD grid |BERT-base|**81.5**|**97.1**|**63.7**|**88.3**|[Here](https://huggingface.co/cccjc/vse-infty/blob/main/f30k_butd_grid_bert/)| 
-|VSEInfty | WSL grid |BERT-base|**88.4**|**98.3**|**74.2**|**93.7**|[Here](https://huggingface.co/cccjc/vse-infty/blob/main/f30k_wsl_grid_bert/)|
+|VSEInfty | BUTD grid |BERT-base|**81.5**|**97.1**|**63.7**|**88.3**|[Here](https://huggingface.co/cccjc/vse-infty/tree/main/f30k_butd_grid_bert/)| 
+|VSEInfty | WSL grid |BERT-base|**88.4**|**98.3**|**74.2**|**93.7**|[Here](https://huggingface.co/cccjc/vse-infty/tree/main/f30k_wsl_grid_bert/)|
 
 #### Result (in R@1) on Crisscrossed Caption benchmark (trained on COCO)
 
